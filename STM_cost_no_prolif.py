@@ -4,6 +4,7 @@ from dash.dependencies import Input, Output
 import numpy as np
 from scipy.integrate import solve_ivp
 import plotly.graph_objs as go
+import os
 
 def system(t, y, alpha, beta, delta, delta_N, delta_STM, dN, dSTM):
     S, I, TN, STM, cost = y  # Unpack state variables
@@ -164,7 +165,7 @@ def update_graph(S0, I0, TN0, STM0, alpha, beta, delta, delta_N, delta_STM, dN, 
     template="plotly_white"
 )
     return figure
-
+port = int(os.environ.get('PORT',8080))
 # Run the app
 if __name__ == '__main__':
-    app.run_server(debug=True, host='0.0.0.0', port=10000)
+    app.run_server(debug=True, host='0.0.0.0', port=port)

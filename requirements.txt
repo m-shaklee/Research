@@ -2,3 +2,5 @@ dash==2.11.0
 plotly
 numpy
 scipy
+plotly.graph_objs
+os
