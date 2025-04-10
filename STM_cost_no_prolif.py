@@ -75,7 +75,7 @@ app.layout = html.Div([
             dcc.Slider(id='alpha', min=0, max=0.1, step=0.01, value=0.05,
                        marks={round(i, 2): f"{i:.2f}" for i in np.linspace(0, 0.1, 6)}),
             html.Label("β: Infectivity"),
-            dcc.Slider(id='beta', min=0, max=0.06, step=0.001, value=0.017&,
+            dcc.Slider(id='beta', min=0, max=0.06, step=0.001, value=0.017,
                        marks={round(i, 3): f"{i:.3f}" for i in np.linspace(0, 0.06, 6)}),
             html.Label("δ: Infected cell death"),
             dcc.Slider(id='delta', min=0, max=0.04, step=0.001, value=0.02,
