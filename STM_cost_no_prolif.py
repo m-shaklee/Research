@@ -15,8 +15,8 @@ def system(t, y, alpha, beta, delta, delta_N, delta_STM, dN, dSTM):
     STM = max(STM, 0)
     
     # Compute derivatives
-    dTN = -alpha * I
-    dSTM = alpha * I
+    chgTN = -alpha * I
+    chgSTM = alpha * I
     dI = beta * S * I - delta * I - delta_N * TN * I - delta_STM * STM * I
     dS = -beta * S * I - dN * TN * S - dSTM * STM * S
     
@@ -24,7 +24,7 @@ def system(t, y, alpha, beta, delta, delta_N, delta_STM, dN, dSTM):
     cost_I = -delta * I - delta_N * TN * I - delta_STM * STM * I
     cost_S = -dN * TN * S - dSTM * STM * S
     dCost = np.abs(cost_I + cost_S)  # Total cost at this step
-    return [dS, dI, dTN, dSTM, dCost]
+    return [dS, dI, chgTN, chgSTM, dCost]
 
 def event_I_zero(t, y, alpha, beta, delta, delta_N, delta_STM, dN, dSTM):
     I = y[1]  # Extract the infected population
