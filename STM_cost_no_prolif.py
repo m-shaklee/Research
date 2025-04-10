@@ -17,7 +17,7 @@ def system(t, y, alpha, beta, delta, delta_N, delta_STM, dN, dSTM):
     # Compute derivatives
     dTN = -alpha * I
     dSTM = alpha * I
-    dI = beta * S * I - delta * I - delta_N * TN * I - 20*delta_STM * STM * I
+    dI = beta * S * I - delta * I - delta_N * TN * I - delta_STM * STM * I
     dS = -beta * S * I - dN * TN * S - dSTM * STM * S
     
     # Compute instantaneous cost
@@ -90,8 +90,8 @@ app.layout = html.Div([
             dcc.Slider(id='dN', min=0, max=0.002, step=0.001, value=0.001,
                        marks={round(i, 4): f"{i:.4f}" for i in np.linspace(0, 0.002, 6)}),
             html.Label("d_STM: Susceptible cell death by STM"),
-            dcc.Slider(id='dSTM', min=0, max=2, step=0.001, value=0.001,
-                       marks={round(i, 4): f"{i:.4f}" for i in np.linspace(0, 0.02, 6)}),
+            dcc.Slider(id='dSTM', min=0, max=20, step=1, value=10,
+                       marks={round(i, 4): f"{i:.4f}" for i in np.linspace(0, 20, 6)}),
         ], style={'width': '48%', 'display': 'inline-block', 'verticalAlign': 'top'})
     ]),
 
