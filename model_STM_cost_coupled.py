@@ -6,7 +6,7 @@ from scipy.integrate import solve_ivp
 import plotly.graph_objs as go
 import os
 
-def system(t, y, alpha, beta, delta, delta_N, delta_STM, dN, dSTM):
+def system(t, y, alpha, beta, delta, delta_N, delta_STM, c_N, c_STM):
     S, I, TN, STM, cost = y  # Unpack state variables
     
     S = max(S, 0)
@@ -14,6 +14,8 @@ def system(t, y, alpha, beta, delta, delta_N, delta_STM, dN, dSTM):
     TN = max(TN, 0)
     STM = max(STM, 0)
     
+    dN = c_N*delta_N
+    dSTM = c_STM*delta_STM
     # Compute derivatives
     chgTN = -alpha * I
     chgSTM = alpha * I
@@ -86,12 +88,12 @@ app.layout = html.Div([
             html.Label("δ_STM: Infected cell death by STM"),
             dcc.Slider(id='delta_STM', min=0, max=0.1, step=0.001, value=0.05,
                        marks={round(i, 3): f"{i:.3f}" for i in np.linspace(0, 0.1, 6)}),
-            html.Label("d_TN: Susceptible cell death by TN"),
-            dcc.Slider(id='dN', min=0, max=0.002, step=0.001, value=0.001,
-                       marks={round(i, 4): f"{i:.4f}" for i in np.linspace(0, 0.002, 6)}),
-            html.Label("d_STM: Susceptible cell death by STM"),
-            dcc.Slider(id='dSTM', min=0, max=0.002, step=0.001, value=0.001,
-                       marks={round(i, 4): f"{i:.4f}" for i in np.linspace(0, 0.002, 6)}),
+            html.Label("c_N: Proportion of susceptible cell death by TN to infected cell death"),
+            dcc.Slider(id='c_N', min=0, max=1, step=0.01, value=0.01,
+                       marks={round(i, 4): f"{i:.4f}" for i in np.linspace(0, 1, 6)}),
+            html.Label("c_STM: Proportion of susceptible cell death by STM to infected cell death"),
+            dcc.Slider(id='c_STM', min=0, max=1, step=0.01, value=0.01,
+                       marks={round(i, 4): f"{i:.4f}" for i in np.linspace(0, 1, 6)}),
         ], style={'width': '48%', 'display': 'inline-block', 'verticalAlign': 'top'})
     ]),
 
@@ -103,8 +105,8 @@ app.layout = html.Div([
 @app.callback(
     Output('output-graph', 'figure'),
     [Input('S0', 'value'),Input('I0', 'value'),Input('TN0', 'value'),Input('STM0', 'value'),Input('alpha', 'value'), Input('beta', 'value'), Input('delta', 'value'),
-     Input('delta_N', 'value'), Input('delta_STM', 'value'), Input('dN', 'value'),
-     Input('dSTM', 'value')]
+     Input('delta_N', 'value'), Input('delta_STM', 'value'), Input('c_N', 'value'),
+     Input('c_STM', 'value')]
 )
 # def update_graph(alpha, beta, delta, delta_N, delta_STM, dN, dSTM,S0,I0,TN0,STM0):
 def update_graph(S0, I0, TN0, STM0, alpha, beta, delta, delta_N, delta_STM, dN, dSTM):
