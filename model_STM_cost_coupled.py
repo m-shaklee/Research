@@ -112,7 +112,7 @@ app.layout = html.Div([
 )
 # def update_graph(alpha, beta, delta, delta_N, delta_STM, dN, dSTM,S0,I0,TN0,STM0):
 def update_graph(S0, I0, TN0, STM0, alpha, beta, delta, delta_N, delta_STM, c_N, c_STM):
-    y0=[S0,I0,TN0,STM0,0]
+    y0=[S0,I0,TN0,STM0,0,0,0]
     sol = solve_ivp(system, t_span, y0, args=(alpha, beta, delta, delta_N, delta_STM, c_N, c_STM),
                      t_eval=t_eval, method='RK45', events=event_I_zero)
     
