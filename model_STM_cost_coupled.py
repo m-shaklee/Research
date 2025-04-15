@@ -123,8 +123,7 @@ def update_graph(S0, I0, TN0, STM0, alpha, beta, delta, delta_N, delta_STM, c_N,
     sub_text1=(f'Final cumulative cost: {np.round(np.sum(cumulative_cost),2)} S0 = {y0[0]}, I0 = {y0[1]}, TN0 = {y0[2]}, STM0 = {y0[3]}')
     sub_text2=(f' α={alpha}, β={beta}, δ={delta}, δ_N={delta_N}, δ_STM={delta_STM}, c_N={c_N}, c_STM={c_STM}')
     
-    subtitle_text = (f"α={alpha}, β={beta}, δ={delta}, δ_N={delta_N}, δ_STM={delta_STM}, "
-                    f"d_N={dN}, d_STM={dSTM}")
+
     # Create the plot
     figure = go.Figure()
     figure.add_trace(go.Scatter(x=t_values, y=S_values,name="Susceptible (S)",line=dict(width=4)))
