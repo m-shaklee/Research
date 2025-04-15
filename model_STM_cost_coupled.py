@@ -134,8 +134,7 @@ def update_graph(S0, I0, TN0, STM0, alpha, beta, delta, delta_N, delta_STM, c_N,
     figure.add_trace(go.Scatter(x=t_values, y=cumulative_cost, name="cost",line=dict(width=4)))
 
     # sub_text1=(f'Final cumulative cost: {np.round(np.sum(cumulative_cost),2)} S0 = {y0[0]}, I0 = {y0[1]}, TN0 = {y0[2]}, STM0 = {y0[3]}\n α={alpha}, β={beta}, δ={delta}, δ_N={delta_N}, δ_STM={delta_STM}, dN={dN}, dSTM={dSTM}')
-    subtitle_text = (f"α={alpha}, β={beta}, δ={delta}, δ_N={delta_N}, δ_STM={delta_STM}, "
-                    f"d_N={dN}, d_STM={dSTM}")
+
 
 
     figure.add_annotation(
