@@ -26,7 +26,9 @@ def system(t, y, alpha, beta, delta, delta_N, delta_STM, c_N, c_STM):
     cost_I = -delta * I - delta_N * TN * I - delta_STM * STM * I
     cost_S = -dN * TN * S - dSTM * STM * S
     dCost = np.abs(cost_I + cost_S)  # Total cost at this step
-    return [dS, dI, chgTN, chgSTM, dCost]
+    dCost_S = np.abs(cost_S)
+    dCost_I = np.abs(cost_I)
+    return [dS, dI, chgTN, chgSTM, dCost, dCost_S, dCost_I]
 
 def event_I_zero(t, y, alpha, beta, delta, delta_N, delta_STM, dN, dSTM):
     I = y[1]  # Extract the infected population
@@ -117,7 +119,7 @@ def update_graph(S0, I0, TN0, STM0, alpha, beta, delta, delta_N, delta_STM, c_N,
     # Extract solutions
     t_values = sol.t
     # X, c = sol.y
-    S_values, I_values, TN_values, STM_values, cumulative_cost = sol.y
+    S_values, I_values, TN_values, STM_values, cumulative_cost, S_cost, I_cost = sol.y
 
     title_text = 'Dynamics of Infection Over Time'
     sub_text1=(f'Final cumulative cost: {np.round(np.sum(cumulative_cost),2)} S0 = {y0[0]}, I0 = {y0[1]}, TN0 = {y0[2]}, STM0 = {y0[3]}')
@@ -131,6 +133,8 @@ def update_graph(S0, I0, TN0, STM0, alpha, beta, delta, delta_N, delta_STM, c_N,
     figure.add_trace(go.Scatter(x=t_values, y=TN_values, name="TN",line=dict(width=4)))
     figure.add_trace(go.Scatter(x=t_values, y=STM_values, name="STM",line=dict(width=4)))
     figure.add_trace(go.Scatter(x=t_values, y=cumulative_cost, name="cost",line=dict(width=4)))
+    figure.add_trace(go.Scatter(x=t_values, y=S_cost, name="cost",line=dict(width=4)))
+    figure.add_trace(go.Scatter(x=t_values, y=I_cost, name="cost",line=dict(width=4)))
 
     # sub_text1=(f'Final cumulative cost: {np.round(np.sum(cumulative_cost),2)} S0 = {y0[0]}, I0 = {y0[1]}, TN0 = {y0[2]}, STM0 = {y0[3]}\n α={alpha}, β={beta}, δ={delta}, δ_N={delta_N}, δ_STM={delta_STM}, dN={dN}, dSTM={dSTM}')
 
