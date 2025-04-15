@@ -7,7 +7,7 @@ import plotly.graph_objs as go
 import os
 
 def system(t, y, alpha, beta, delta, delta_N, delta_STM, c_N, c_STM):
-    S, I, TN, STM, cost = y  # Unpack state variables
+    S, I, TN, STM, cost, costS, costI = y  # Unpack state variables
     
     S = max(S, 0)
     I = max(I, 0)
@@ -133,8 +133,8 @@ def update_graph(S0, I0, TN0, STM0, alpha, beta, delta, delta_N, delta_STM, c_N,
     figure.add_trace(go.Scatter(x=t_values, y=TN_values, name="TN",line=dict(width=4)))
     figure.add_trace(go.Scatter(x=t_values, y=STM_values, name="STM",line=dict(width=4)))
     figure.add_trace(go.Scatter(x=t_values, y=cumulative_cost, name="cost",line=dict(width=4)))
-    figure.add_trace(go.Scatter(x=t_values, y=S_cost, name="cost",line=dict(width=4)))
-    figure.add_trace(go.Scatter(x=t_values, y=I_cost, name="cost",line=dict(width=4)))
+    figure.add_trace(go.Scatter(x=t_values, y=S_cost, name="S cost",line=dict(width=4)))
+    figure.add_trace(go.Scatter(x=t_values, y=I_cost, name="I cost",line=dict(width=4)))
 
     # sub_text1=(f'Final cumulative cost: {np.round(np.sum(cumulative_cost),2)} S0 = {y0[0]}, I0 = {y0[1]}, TN0 = {y0[2]}, STM0 = {y0[3]}\n α={alpha}, β={beta}, δ={delta}, δ_N={delta_N}, δ_STM={delta_STM}, dN={dN}, dSTM={dSTM}')
 
