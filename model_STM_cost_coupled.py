@@ -44,7 +44,7 @@ t_eval = np.linspace(0, 100, 500)  # Time points for evaluation
 app = dash.Dash(__name__)
 
 app.layout = html.Div([
-    html.H2("STM system 1"),
+    html.H2("STM system coupled"),
 
     html.Div([
         # LEFT COLUMN
@@ -92,8 +92,8 @@ app.layout = html.Div([
             dcc.Slider(id='c_N', min=0, max=1, step=0.01, value=0.01,
                        marks={round(i, 4): f"{i:.4f}" for i in np.linspace(0, 1, 6)}),
             html.Label("c_STM: Proportion of susceptible cell death by STM to infected cell death"),
-            dcc.Slider(id='c_STM', min=0, max=1, step=0.01, value=0.01,
-                       marks={round(i, 4): f"{i:.4f}" for i in np.linspace(0, 1, 6)}),
+            dcc.Slider(id='c_STM', min=0, max=2, step=0.01, value=0.01,
+                       marks={round(i, 4): f"{i:.4f}" for i in np.linspace(0, 2, 6)}),
         ], style={'width': '48%', 'display': 'inline-block', 'verticalAlign': 'top'})
     ]),
 
