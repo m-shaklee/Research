@@ -33,7 +33,7 @@ def system(t, y, alpha, beta, delta, delta_N, delta_STM, c_N, c_STM):
 
 # Time span
 t_span = (0, 21)  # Simulate from t=0 to t=50
-t_eval = np.linspace(0, 21, 500)  # Time points for evaluation
+t_eval = np.linspace(0, 21, 2000)  # Time points for evaluation
 # Create the Dash app
 app = dash.Dash(__name__)
 
