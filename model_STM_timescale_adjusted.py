@@ -148,9 +148,10 @@ def update_graph(S0, I0, TN0, STM0, alpha, beta, delta, delta_N, delta_STM, c_N,
 
     figure.update_layout(
     # title="Dynamics of Infection Over Time",
+    yaxis_type="log",
     title_font=dict(size=24),  # Adjust title font size
     xaxis_title="Time",
-    yaxis_title="Population",
+    yaxis_title="Cells/Cost (log)",
     xaxis_title_font=dict(size=28),  # Adjust x-axis title font size
     yaxis_title_font=dict(size=28),  # Adjust y-axis title font size
     xaxis=dict(tickfont=dict(size=20)),  # Adjust x-axis tick labels font size
