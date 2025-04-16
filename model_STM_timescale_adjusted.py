@@ -122,9 +122,9 @@ def update_graph(S0, I0, TN0, STM0, alpha, beta, delta, delta_N, delta_STM, c_N,
     figure = go.Figure()
     figure.add_trace(go.Scatter(x=t_values, y=S_values,name="Susceptible (S)",line=dict(width=4)))
     figure.add_trace(go.Scatter(x=t_values, y=I_values, name="Infected (I)",line=dict(width=4)))
-    figure.add_trace(go.Scatter(x=t_values, y=TN_values, name="TN",line=dict(width=4)))
-    figure.add_trace(go.Scatter(x=t_values, y=STM_values, name="STM",line=dict(width=4)))
-    figure.add_trace(go.Scatter(x=t_values, y=cumulative_cost, name="cost",line=dict(width=4)))
+    # figure.add_trace(go.Scatter(x=t_values, y=TN_values, name="TN",line=dict(width=4)))
+    # figure.add_trace(go.Scatter(x=t_values, y=STM_values, name="STM",line=dict(width=4)))
+    # figure.add_trace(go.Scatter(x=t_values, y=cumulative_cost, name="cost",line=dict(width=4)))
     # figure.add_trace(go.Scatter(x=t_values, y=S_cost, name="S cost",line=dict(width=4)))
     # figure.add_trace(go.Scatter(x=t_values, y=I_cost, name="I cost",line=dict(width=4)))
 
