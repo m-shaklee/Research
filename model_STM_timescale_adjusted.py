@@ -47,7 +47,7 @@ app.layout = html.Div([
             dcc.Slider(id='S0', min=0, max=5*10**8, step=10*2, value=4*10**8,
                        marks={round(i, 2): f"{i:.2f}" for i in np.linspace(0,  5*10**8, 6)}),
             html.Label("I0:"),
-            dcc.Slider(id='I0', min=0, max=1*10**8, step=10*2, value=10*6,
+            dcc.Slider(id='I0', min=0, max=1*10**8, step=10*2, value=10**6,
                        marks={round(i, 2): f"{i:.2f}" for i in np.linspace(0,  1*10**8, 6)}),
             html.Label("TN0:"),
             dcc.Slider(id='TN0', min=0, max=2*10**8, step=1, value=1*10**8,
