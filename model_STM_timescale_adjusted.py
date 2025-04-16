@@ -38,7 +38,7 @@ t_eval = np.linspace(0, 21, 500)  # Time points for evaluation
 app = dash.Dash(__name__)
 
 app.layout = html.Div([
-    html.H2("STM system coupled"),
+    html.H2("STM system timescale adjusted"),
 
     html.Div([
         # LEFT COLUMN
@@ -77,11 +77,11 @@ app.layout = html.Div([
             dcc.Slider(id='delta', min=0, max=20, step=1, value=7,
                        marks={round(i, 3): f"{i:.3f}" for i in np.linspace(0, 10, 6)}),
             html.Label("δ_TN: Infected cell death by TN"),
-            dcc.Slider(id='delta_N', min=0, max=0.1, step=0.001, value=0.05,
-                       marks={round(i, 2): f"{i:.2f}" for i in np.linspace(0, 0.1, 6)}),
+            dcc.Slider(id='delta_N', min=0, max=20, step=1, value=1,
+                       marks={round(i, 2): f"{i:.2f}" for i in np.linspace(0, 20, 6)}),
             html.Label("δ_STM: Infected cell death by STM"),
-            dcc.Slider(id='delta_STM', min=0, max=0.1, step=0.001, value=0.08,
-                       marks={round(i, 3): f"{i:.3f}" for i in np.linspace(0, 0.1, 6)}),
+            dcc.Slider(id='delta_STM', min=0, max=20, step=1, value=5,
+                       marks={round(i, 3): f"{i:.3f}" for i in np.linspace(0, 20, 6)}),
             html.Label("c_N: Proportion of susceptible cell death by TN to infected cell death"),
             dcc.Slider(id='c_N', min=0, max=1, step=0.01, value=0.01,
                        marks={round(i, 4): f"{i:.4f}" for i in np.linspace(0, 1, 6)}),
