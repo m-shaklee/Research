@@ -77,7 +77,7 @@ app.layout = html.Div([
                 id='beta',
                 min=0,
                 max=5e-6,
-                step=1e-7,
+                step=5e-7,
                 value=1e-6,
                 marks={i: f"{i:.0e}" for i in np.linspace(0, 5e-6, 6)}
             ),
