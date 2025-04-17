@@ -80,7 +80,7 @@ app.layout = html.Div([
                 step=1e-7,
                 value=1.5e-6,
                 marks={i: f"{i:.0e}" for i in np.linspace(0, 5e-6, 6)}
-            )
+            ),
             html.Label("δ: Infected cell death"),
             dcc.Slider(id='delta', min=0, max=1*10**-6, step=0.1*10**-6, value=0.5*10**-6,
                        marks={i: f"{i:.0e}" for i in np.linspace(0, 1e-6, 6)}),
