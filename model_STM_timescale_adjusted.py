@@ -74,8 +74,8 @@ app.layout = html.Div([
             # dcc.Slider(id='beta', min=0, max=5*10**-6, step=0.1*10**-6, value=1.5*10**-6,
             #            marks={i: f"{i:.0e}" for i in np.linspace(0, 5e-6, 6)}),
             html.Label("β: Infectivity"),
-            dcc.Slider(id='beta', min=0, max=0.06, step=0.001, value=0.017,
-                       marks={round(i, 6): f"{i:.6f}" for i in np.linspace(0, 0.06, 6)}),
+            dcc.Slider(id='beta', min=0, max=0.0000001, step=0.00000005, value=0.00000005,
+                       marks={round(i, 7): f"{i:.7f}" for i in np.linspace(0, 0.00000001, 6)}),
             # html.Label("δ: Infected cell death"),
             # dcc.Slider(id='delta', min=0, max=1*10**-6, step=0.1*10**-6, value=0.5*10**-6,
             #            marks={round(i, 6): f"{i:.6f}" for i in np.linspace(0, 1*10**-6, 6)}),
@@ -94,7 +94,6 @@ app.layout = html.Div([
             html.Label("δ_STM: Infected cell death by STM"),
             dcc.Slider(id='delta_STM', min=0, max=0.1, step=0.001, value=0.08,
                        marks={round(i, 3): f"{i:.3f}" for i in np.linspace(0, 0.1, 6)}),
-          
             html.Label("c_N: Proportion of susceptible cell death by TN to infected cell death"),
             dcc.Slider(id='c_N', min=0, max=1, step=0.01, value=0.005,
                        marks={round(i, 4): f"{i:.4f}" for i in np.linspace(0, 1, 6)}),
