@@ -73,7 +73,7 @@ app.layout = html.Div([
             # html.Label("β: Infectivity"),
             # dcc.Slider(id='beta', min=0, max=5*10**-6, step=0.1*10**-6, value=1.5*10**-6,
             #            marks={i: f"{i:.0e}" for i in np.linspace(0, 5e-6, 6)}),
-            html.Label("β: Infectivity (e-7)"),
+            html.Label("β: Infectivity (e-8)"),
             dcc.Slider(id='beta', min=0, max=10, step=0.5, value=0.5,
                        marks={round(i, 2): f"{i:.2f}" for i in np.linspace(0, 10, 6)}),
             # html.Label("δ: Infected cell death"),
@@ -85,13 +85,13 @@ app.layout = html.Div([
             # html.Label("δ_STM: Infected cell death by STM"),
             # dcc.Slider(id='delta_STM', min=0, max=1*10**-6, step=0.1*10**-6, value=0.5*10**-6,
             #            marks={round(i, 6): f"{i:.6f}" for i in np.linspace(0, 1*10**-6, 6)}),
-            html.Label("δ: Infected cell death (e-7)"),
+            html.Label("δ: Infected cell death (e-8)"),
             dcc.Slider(id='delta', min=0, max=10, step=0.5, value=0.5,
                        marks={round(i, 2): f"{i:.2f}" for i in np.linspace(0, 10, 6)}),
-            html.Label("δ_TN: Infected cell death by TN (e-7)"),
+            html.Label("δ_TN: Infected cell death by TN (e-8)"),
             dcc.Slider(id='delta_N', min=0, max=10, step=0.5, value=0.5,
                        marks={round(i, 2): f"{i:.2f}" for i in np.linspace(0, 10, 6)}),
-            html.Label("δ_STM: Infected cell death by STM (e-7)"),
+            html.Label("δ_STM: Infected cell death by STM (e-8)"),
             dcc.Slider(id='delta_STM', max=10, step=0.5, value=0.5,
                        marks={round(i, 2): f"{i:.2f}" for i in np.linspace(0, 10, 6)}),
             html.Label("c_N: Proportion of susceptible cell death by TN to infected cell death"),
@@ -117,10 +117,10 @@ app.layout = html.Div([
 # def update_graph(alpha, beta, delta, delta_N, delta_STM, dN, dSTM,S0,I0,TN0,STM0):
 def update_graph(S0, I0, TN0, STM0, alpha, beta, delta, delta_N, delta_STM, c_N, c_STM):
     y0=[S0,I0,TN0,STM0,0,0,0]
-    beta=beta*1e-7
-    delta=delta*1e-7
-    delta_N=delta_N*1e-7
-    delta_STM=delta_STM*1e-7
+    beta=beta*1e-8
+    delta=delta*1e-8
+    delta_N=delta_N*1e-8
+    delta_STM=delta_STM*1e-8
     sol = solve_ivp(system, t_span, y0, args=(alpha, beta, delta, delta_N, delta_STM, c_N, c_STM),
                      t_eval=t_eval, method='RK45')
     
