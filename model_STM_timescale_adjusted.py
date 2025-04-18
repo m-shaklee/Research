@@ -181,26 +181,35 @@ def update_graph(S0, I0, TN0, STM0, alpha, beta, delta, delta_N, delta_STM, c_N,
     
 #     return figure
 
+    colors = {
+    "S": "#1f77b4",       # Blue
+    "I": "#ff7f0e",       # Orange
+    "TN": "#2ca02c",      # Green
+    "STM": "#d62728",     # Red
+    "cost": "#9467bd"     # Purple
+}
+
+    # Create subplot with two rows: linear and log scale
     figure = make_subplots(
-    rows=2, cols=1,
-    shared_xaxes=True,
-    vertical_spacing=0.15,
-    subplot_titles=("Linear Scale", "Logarithmic Scale (y-axis)")
-)
+        rows=2, cols=1,
+        shared_xaxes=True,
+        vertical_spacing=0.15,
+        subplot_titles=("Linear Scale", "Logarithmic Scale (y-axis)")
+    )
 
     # Plot on linear scale (row=1)
-    figure.add_trace(go.Scatter(x=t_values, y=S_values, name="Susceptible (S)", line=dict(width=8)), row=1, col=1)
-    figure.add_trace(go.Scatter(x=t_values, y=I_values, name="Infected (I)", line=dict(width=8)), row=1, col=1)
-    figure.add_trace(go.Scatter(x=t_values, y=TN_values, name="TN", line=dict(width=4)), row=1, col=1)
-    figure.add_trace(go.Scatter(x=t_values, y=STM_values, name="STM", line=dict(width=4)), row=1, col=1)
-    figure.add_trace(go.Scatter(x=t_values, y=cumulative_cost, name="cost", line=dict(width=4)), row=1, col=1)
+    figure.add_trace(go.Scatter(x=t_values, y=S_values, name="Susceptible (S)", line=dict(width=8, color=colors["S"])), row=1, col=1)
+    figure.add_trace(go.Scatter(x=t_values, y=I_values, name="Infected (I)", line=dict(width=8, color=colors["I"])), row=1, col=1)
+    figure.add_trace(go.Scatter(x=t_values, y=TN_values, name="TN", line=dict(width=4, color=colors["TN"])), row=1, col=1)
+    figure.add_trace(go.Scatter(x=t_values, y=STM_values, name="STM", line=dict(width=4, color=colors["STM"])), row=1, col=1)
+    figure.add_trace(go.Scatter(x=t_values, y=cumulative_cost, name="cost", line=dict(width=4, color=colors["cost"])), row=1, col=1)
 
-    # Plot same data on log scale (row=2)
-    figure.add_trace(go.Scatter(x=t_values, y=S_values, name="Susceptible (S)", line=dict(width=8), showlegend=False), row=2, col=1)
-    figure.add_trace(go.Scatter(x=t_values, y=I_values, name="Infected (I)", line=dict(width=8), showlegend=False), row=2, col=1)
-    figure.add_trace(go.Scatter(x=t_values, y=TN_values, name="TN", line=dict(width=4), showlegend=False), row=2, col=1)
-    figure.add_trace(go.Scatter(x=t_values, y=STM_values, name="STM", line=dict(width=4), showlegend=False), row=2, col=1)
-    figure.add_trace(go.Scatter(x=t_values, y=cumulative_cost, name="cost", line=dict(width=4), showlegend=False), row=2, col=1)
+    # Plot same data on log scale (row=2), hide legend
+    figure.add_trace(go.Scatter(x=t_values, y=S_values, showlegend=False, line=dict(width=8, color=colors["S"])), row=2, col=1)
+    figure.add_trace(go.Scatter(x=t_values, y=I_values, showlegend=False, line=dict(width=8, color=colors["I"])), row=2, col=1)
+    figure.add_trace(go.Scatter(x=t_values, y=TN_values, showlegend=False, line=dict(width=4, color=colors["TN"])), row=2, col=1)
+    figure.add_trace(go.Scatter(x=t_values, y=STM_values, showlegend=False, line=dict(width=4, color=colors["STM"])), row=2, col=1)
+    figure.add_trace(go.Scatter(x=t_values, y=cumulative_cost, showlegend=False, line=dict(width=4, color=colors["cost"])), row=2, col=1)
 
     # Set log scale for the second subplot y-axis
     figure.update_yaxes(type="log", row=2, col=1)
