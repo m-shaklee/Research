@@ -48,10 +48,10 @@ app.layout = html.Div([
             dcc.Slider(id='S0', min=0, max=5*10**8, step=10*2, value=4*10**8,
                        marks={round(i, 1): f"{i:.1f}" for i in np.linspace(0,  5*10**8, 6)}),
             html.Label("I0:"),
-            dcc.Slider(id='I0', min=0, max=100, step=10, value=10,
+            dcc.Slider(id='I0', min=0, max=100, step=10, value=100,
                        marks={round(i, 2): f"{i:.2f}" for i in np.linspace(0,  100, 6)}),
             html.Label("TN0:"),
-            dcc.Slider(id='TN0', min=0, max=2*10**8, step=1, value=1*10**8,
+            dcc.Slider(id='TN0', min=0, max=2*10**8, step=1, value=8*10**7,
                        marks={round(i, 2): f"{i:.2f}" for i in np.linspace(0,  2*10**8, 6)}),
             html.Label("STM0:"),
             dcc.Slider(id='STM0', min=0, max=1*10**8, step=1, value=0,
@@ -75,7 +75,7 @@ app.layout = html.Div([
             # dcc.Slider(id='beta', min=0, max=5*10**-6, step=0.1*10**-6, value=1.5*10**-6,
             #            marks={i: f"{i:.0e}" for i in np.linspace(0, 5e-6, 6)}),
             html.Label("β: Infectivity (e-9)"),
-            dcc.Slider(id='beta', min=0, max=10, step=0.5, value=6.5,
+            dcc.Slider(id='beta', min=0, max=10, step=0.5, value=7,
                        marks={round(i, 2): f"{i:.2f}" for i in np.linspace(0, 10, 6)}),
             # html.Label("δ: Infected cell death"),
             # dcc.Slider(id='delta', min=0, max=1*10**-6, step=0.1*10**-6, value=0.5*10**-6,
@@ -193,7 +193,7 @@ def update_graph(S0, I0, TN0, STM0, alpha, beta, delta, delta_N, delta_STM, c_N,
     figure = make_subplots(
         rows=2, cols=1,
         shared_xaxes=True,
-        vertical_spacing=0.5,
+        vertical_spacing=0.05,
         # subplot_titles=("Linear Scale", "Logarithmic Scale (y-axis)")
     )
 
@@ -245,7 +245,7 @@ def update_graph(S0, I0, TN0, STM0, alpha, beta, delta, delta_N, delta_STM, c_N,
         text=sub_text1, font=dict(size=24), align="center"
     )
     figure.add_annotation(
-        x=0.5, y=1.01, xref="paper", yref="paper", showarrow=False,
+        x=0.5, y=1.02, xref="paper", yref="paper", showarrow=False,
         text=sub_text2, font=dict(size=24), align="center"
     )
     return figure
