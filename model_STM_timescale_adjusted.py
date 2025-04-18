@@ -177,7 +177,49 @@ def update_graph(S0, I0, TN0, STM0, alpha, beta, delta, delta_N, delta_STM, c_N,
     ),
     template="plotly_white"
 )
-    return figure
+    figure2 = go.Figure()
+    figure2.add_trace(go.Scatter(x=t_values, y=S_values,name="Susceptible (S)",line=dict(width=8)))
+    figure2.add_trace(go.Scatter(x=t_values, y=I_values, name="Infected (I)",line=dict(width=8)))
+    figure2.add_trace(go.Scatter(x=t_values, y=TN_values, name="TN",line=dict(width=4)))
+    figure2.add_trace(go.Scatter(x=t_values, y=STM_values, name="STM",line=dict(width=4)))
+    figure2.add_trace(go.Scatter(x=t_values, y=cumulative_cost, name="cost",line=dict(width=4)))
+    # figure.add_trace(go.Scatter(x=t_values, y=S_cost, name="S cost",line=dict(width=4)))
+    # figure.add_trace(go.Scatter(x=t_values, y=I_cost, name="I cost",line=dict(width=4)))
+
+    # sub_text1=(f'Final cumulative cost: {np.round(np.sum(cumulative_cost),2)} S0 = {y0[0]}, I0 = {y0[1]}, TN0 = {y0[2]}, STM0 = {y0[3]}\n α={alpha}, β={beta}, δ={delta}, δ_N={delta_N}, δ_STM={delta_STM}, dN={dN}, dSTM={dSTM}')
+
+
+
+    figure2.add_annotation(
+        x=0.5, y=1.08, xref="paper", yref="paper", showarrow=False,
+        text=sub_text1, font=dict(size=24), align="center"
+    )
+    figure2.add_annotation(
+        x=0.5, y=1.03, xref="paper", yref="paper", showarrow=False,
+        text=sub_text2, font=dict(size=24), align="center"
+    )
+    figure2.add_annotation(
+        x=0.5, y=1.13, xref="paper", yref="paper", showarrow=False,
+        text=title_text, font=dict(size=28), align="center"
+    )
+
+
+    figure2.update_layout(
+    # title="Dynamics of Infection Over Time",
+    # yaxis_type="log",
+    title_font=dict(size=24),  # Adjust title font size
+    xaxis_title="Time",
+    yaxis_title="Cells/Cost (log)",
+    xaxis_title_font=dict(size=28),  # Adjust x-axis title font size
+    yaxis_title_font=dict(size=28),  # Adjust y-axis title font size
+    xaxis=dict(tickfont=dict(size=20)),  # Adjust x-axis tick labels font size
+    yaxis=dict(tickfont=dict(size=20)),  # Adjust y-axis tick labels font size
+    legend=dict(
+        font=dict(size=28)  # Change the font size of the legend text
+    ),
+    template="plotly_white"
+)
+    return figure, figure2
 port = int(os.environ.get('PORT',8080))
 # Run the app
 if __name__ == '__main__':
