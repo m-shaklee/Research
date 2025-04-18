@@ -238,6 +238,7 @@ def update_graph(S0, I0, TN0, STM0, alpha, beta, delta, delta_N, delta_STM, c_N,
         x=0.5, y=1.06, xref="paper", yref="paper", showarrow=False,
         text=sub_text2, font=dict(size=24), align="center"
     )
+    return figure
 port = int(os.environ.get('PORT',8080))
 # Run the app
 if __name__ == '__main__':
