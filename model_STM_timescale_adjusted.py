@@ -106,7 +106,7 @@ app.layout = html.Div([
 
     html.Br(),
     # dcc.Graph(id='output-graph')
-    dcc.Graph(id='output-graph', style={'height': '1000px', 'width': '100%'})
+    dcc.Graph(id='output-graph', style={'height': '2000px', 'width': '100%'})
 ])
 # Callback to update the plot
 @app.callback(
