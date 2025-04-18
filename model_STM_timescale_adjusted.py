@@ -218,9 +218,9 @@ def update_graph(S0, I0, TN0, STM0, alpha, beta, delta, delta_N, delta_STM, c_N,
     figure.update_layout(
         height=2000,
         title_font=dict(size=24),
-        xaxis_title="Time",
+        # xaxis_title="Time",
         yaxis_title="Cells/Cost (linear)",
-        xaxis2_title="Time",
+        xaxis2_title="Days",
         yaxis2_title="Cells/Cost (log)",
         xaxis_title_font=dict(size=28),
         yaxis_title_font=dict(size=28),
@@ -236,11 +236,11 @@ def update_graph(S0, I0, TN0, STM0, alpha, beta, delta, delta_N, delta_STM, c_N,
 
     # Add annotations above the plot
     figure.add_annotation(
-        x=0.5, y=1.5, xref="paper", yref="paper", showarrow=False,
+        x=0.5, y=1.3, xref="paper", yref="paper", showarrow=False,
         text=title_text, font=dict(size=28), align="center"
     )
     figure.add_annotation(
-        x=0.5, y=1.3, xref="paper", yref="paper", showarrow=False,
+        x=0.5, y=1.2, xref="paper", yref="paper", showarrow=False,
         text=sub_text1, font=dict(size=24), align="center"
     )
     figure.add_annotation(
