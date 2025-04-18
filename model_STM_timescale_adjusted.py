@@ -4,6 +4,7 @@ from dash.dependencies import Input, Output
 import numpy as np
 from scipy.integrate import solve_ivp
 import plotly.graph_objs as go
+from plotly.subplots import make_subplots
 import os
 
 def system(t, y, alpha, beta, delta, delta_N, delta_STM, c_N, c_STM):
@@ -135,91 +136,108 @@ def update_graph(S0, I0, TN0, STM0, alpha, beta, delta, delta_N, delta_STM, c_N,
     
 
     # Create the plot
-    figure = go.Figure()
-    figure.add_trace(go.Scatter(x=t_values, y=S_values,name="Susceptible (S)",line=dict(width=8)))
-    figure.add_trace(go.Scatter(x=t_values, y=I_values, name="Infected (I)",line=dict(width=8)))
-    figure.add_trace(go.Scatter(x=t_values, y=TN_values, name="TN",line=dict(width=4)))
-    figure.add_trace(go.Scatter(x=t_values, y=STM_values, name="STM",line=dict(width=4)))
-    figure.add_trace(go.Scatter(x=t_values, y=cumulative_cost, name="cost",line=dict(width=4)))
-    # figure.add_trace(go.Scatter(x=t_values, y=S_cost, name="S cost",line=dict(width=4)))
-    # figure.add_trace(go.Scatter(x=t_values, y=I_cost, name="I cost",line=dict(width=4)))
+#     figure = go.Figure()
+#     figure.add_trace(go.Scatter(x=t_values, y=S_values,name="Susceptible (S)",line=dict(width=8)))
+#     figure.add_trace(go.Scatter(x=t_values, y=I_values, name="Infected (I)",line=dict(width=8)))
+#     figure.add_trace(go.Scatter(x=t_values, y=TN_values, name="TN",line=dict(width=4)))
+#     figure.add_trace(go.Scatter(x=t_values, y=STM_values, name="STM",line=dict(width=4)))
+#     figure.add_trace(go.Scatter(x=t_values, y=cumulative_cost, name="cost",line=dict(width=4)))
+#     # figure.add_trace(go.Scatter(x=t_values, y=S_cost, name="S cost",line=dict(width=4)))
+#     # figure.add_trace(go.Scatter(x=t_values, y=I_cost, name="I cost",line=dict(width=4)))
 
-    # sub_text1=(f'Final cumulative cost: {np.round(np.sum(cumulative_cost),2)} S0 = {y0[0]}, I0 = {y0[1]}, TN0 = {y0[2]}, STM0 = {y0[3]}\n α={alpha}, β={beta}, δ={delta}, δ_N={delta_N}, δ_STM={delta_STM}, dN={dN}, dSTM={dSTM}')
-
-
-
-    figure.add_annotation(
-        x=0.5, y=1.08, xref="paper", yref="paper", showarrow=False,
-        text=sub_text1, font=dict(size=24), align="center"
-    )
-    figure.add_annotation(
-        x=0.5, y=1.03, xref="paper", yref="paper", showarrow=False,
-        text=sub_text2, font=dict(size=24), align="center"
-    )
-    figure.add_annotation(
-        x=0.5, y=1.13, xref="paper", yref="paper", showarrow=False,
-        text=title_text, font=dict(size=28), align="center"
-    )
+#     # sub_text1=(f'Final cumulative cost: {np.round(np.sum(cumulative_cost),2)} S0 = {y0[0]}, I0 = {y0[1]}, TN0 = {y0[2]}, STM0 = {y0[3]}\n α={alpha}, β={beta}, δ={delta}, δ_N={delta_N}, δ_STM={delta_STM}, dN={dN}, dSTM={dSTM}')
 
 
+
+#     figure.add_annotation(
+#         x=0.5, y=1.08, xref="paper", yref="paper", showarrow=False,
+#         text=sub_text1, font=dict(size=24), align="center"
+#     )
+#     figure.add_annotation(
+#         x=0.5, y=1.03, xref="paper", yref="paper", showarrow=False,
+#         text=sub_text2, font=dict(size=24), align="center"
+#     )
+#     figure.add_annotation(
+#         x=0.5, y=1.13, xref="paper", yref="paper", showarrow=False,
+#         text=title_text, font=dict(size=28), align="center"
+#     )
+
+
+#     figure.update_layout(
+#     # title="Dynamics of Infection Over Time",
+#     # yaxis_type="log",
+#     title_font=dict(size=24),  # Adjust title font size
+#     xaxis_title="Time",
+#     yaxis_title="Cells/Cost (log)",
+#     xaxis_title_font=dict(size=28),  # Adjust x-axis title font size
+#     yaxis_title_font=dict(size=28),  # Adjust y-axis title font size
+#     xaxis=dict(tickfont=dict(size=20)),  # Adjust x-axis tick labels font size
+#     yaxis=dict(tickfont=dict(size=20)),  # Adjust y-axis tick labels font size
+#     legend=dict(
+#         font=dict(size=28)  # Change the font size of the legend text
+#     ),
+#     template="plotly_white"
+# )
+    
+#     return figure
+
+    figure = make_subplots(
+    rows=2, cols=1,
+    shared_xaxes=True,
+    vertical_spacing=0.15,
+    subplot_titles=("Linear Scale", "Logarithmic Scale (y-axis)")
+)
+
+    # Plot on linear scale (row=1)
+    figure.add_trace(go.Scatter(x=t_values, y=S_values, name="Susceptible (S)", line=dict(width=8)), row=1, col=1)
+    figure.add_trace(go.Scatter(x=t_values, y=I_values, name="Infected (I)", line=dict(width=8)), row=1, col=1)
+    figure.add_trace(go.Scatter(x=t_values, y=TN_values, name="TN", line=dict(width=4)), row=1, col=1)
+    figure.add_trace(go.Scatter(x=t_values, y=STM_values, name="STM", line=dict(width=4)), row=1, col=1)
+    figure.add_trace(go.Scatter(x=t_values, y=cumulative_cost, name="cost", line=dict(width=4)), row=1, col=1)
+
+    # Plot same data on log scale (row=2)
+    figure.add_trace(go.Scatter(x=t_values, y=S_values, name="Susceptible (S)", line=dict(width=8), showlegend=False), row=2, col=1)
+    figure.add_trace(go.Scatter(x=t_values, y=I_values, name="Infected (I)", line=dict(width=8), showlegend=False), row=2, col=1)
+    figure.add_trace(go.Scatter(x=t_values, y=TN_values, name="TN", line=dict(width=4), showlegend=False), row=2, col=1)
+    figure.add_trace(go.Scatter(x=t_values, y=STM_values, name="STM", line=dict(width=4), showlegend=False), row=2, col=1)
+    figure.add_trace(go.Scatter(x=t_values, y=cumulative_cost, name="cost", line=dict(width=4), showlegend=False), row=2, col=1)
+
+    # Set log scale for the second subplot y-axis
+    figure.update_yaxes(type="log", row=2, col=1)
+
+    # Layout
     figure.update_layout(
-    # title="Dynamics of Infection Over Time",
-    # yaxis_type="log",
-    title_font=dict(size=24),  # Adjust title font size
-    xaxis_title="Time",
-    yaxis_title="Cells/Cost (log)",
-    xaxis_title_font=dict(size=28),  # Adjust x-axis title font size
-    yaxis_title_font=dict(size=28),  # Adjust y-axis title font size
-    xaxis=dict(tickfont=dict(size=20)),  # Adjust x-axis tick labels font size
-    yaxis=dict(tickfont=dict(size=20)),  # Adjust y-axis tick labels font size
-    legend=dict(
-        font=dict(size=28)  # Change the font size of the legend text
-    ),
-    template="plotly_white"
-)
-    figure2 = go.Figure()
-    figure2.add_trace(go.Scatter(x=t_values, y=S_values,name="Susceptible (S)",line=dict(width=8)))
-    figure2.add_trace(go.Scatter(x=t_values, y=I_values, name="Infected (I)",line=dict(width=8)))
-    figure2.add_trace(go.Scatter(x=t_values, y=TN_values, name="TN",line=dict(width=4)))
-    figure2.add_trace(go.Scatter(x=t_values, y=STM_values, name="STM",line=dict(width=4)))
-    figure2.add_trace(go.Scatter(x=t_values, y=cumulative_cost, name="cost",line=dict(width=4)))
-    # figure.add_trace(go.Scatter(x=t_values, y=S_cost, name="S cost",line=dict(width=4)))
-    # figure.add_trace(go.Scatter(x=t_values, y=I_cost, name="I cost",line=dict(width=4)))
-
-    # sub_text1=(f'Final cumulative cost: {np.round(np.sum(cumulative_cost),2)} S0 = {y0[0]}, I0 = {y0[1]}, TN0 = {y0[2]}, STM0 = {y0[3]}\n α={alpha}, β={beta}, δ={delta}, δ_N={delta_N}, δ_STM={delta_STM}, dN={dN}, dSTM={dSTM}')
-
-
-
-    figure2.add_annotation(
-        x=0.5, y=1.08, xref="paper", yref="paper", showarrow=False,
-        text=sub_text1, font=dict(size=24), align="center"
+        height=1000,
+        title_font=dict(size=24),
+        xaxis_title="Time",
+        yaxis_title="Cells/Cost (linear)",
+        xaxis2_title="Time",
+        yaxis2_title="Cells/Cost (log)",
+        xaxis_title_font=dict(size=28),
+        yaxis_title_font=dict(size=28),
+        xaxis2_title_font=dict(size=28),
+        yaxis2_title_font=dict(size=28),
+        xaxis=dict(tickfont=dict(size=20)),
+        yaxis=dict(tickfont=dict(size=20)),
+        xaxis2=dict(tickfont=dict(size=20)),
+        yaxis2=dict(tickfont=dict(size=20)),
+        legend=dict(font=dict(size=24)),
+        template="plotly_white"
     )
-    figure2.add_annotation(
-        x=0.5, y=1.03, xref="paper", yref="paper", showarrow=False,
-        text=sub_text2, font=dict(size=24), align="center"
-    )
-    figure2.add_annotation(
-        x=0.5, y=1.13, xref="paper", yref="paper", showarrow=False,
+
+    # Add annotations above the plot
+    figure.add_annotation(
+        x=0.5, y=1.15, xref="paper", yref="paper", showarrow=False,
         text=title_text, font=dict(size=28), align="center"
     )
-
-
-    figure2.update_layout(
-    # title="Dynamics of Infection Over Time",
-    # yaxis_type="log",
-    title_font=dict(size=24),  # Adjust title font size
-    xaxis_title="Time",
-    yaxis_title="Cells/Cost (log)",
-    xaxis_title_font=dict(size=28),  # Adjust x-axis title font size
-    yaxis_title_font=dict(size=28),  # Adjust y-axis title font size
-    xaxis=dict(tickfont=dict(size=20)),  # Adjust x-axis tick labels font size
-    yaxis=dict(tickfont=dict(size=20)),  # Adjust y-axis tick labels font size
-    legend=dict(
-        font=dict(size=28)  # Change the font size of the legend text
-    ),
-    template="plotly_white"
-)
-    return figure, figure2
+    figure.add_annotation(
+        x=0.5, y=1.10, xref="paper", yref="paper", showarrow=False,
+        text=sub_text1, font=dict(size=24), align="center"
+    )
+    figure.add_annotation(
+        x=0.5, y=1.06, xref="paper", yref="paper", showarrow=False,
+        text=sub_text2, font=dict(size=24), align="center"
+    )
 port = int(os.environ.get('PORT',8080))
 # Run the app
 if __name__ == '__main__':
