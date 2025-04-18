@@ -183,10 +183,10 @@ def update_graph(S0, I0, TN0, STM0, alpha, beta, delta, delta_N, delta_STM, c_N,
 
     colors = {
     "S": "#1f77b4",       # Blue
-    "I": "#ff7f0e",       # Orange
+    "cost": "#ff7f0e",       # Orange
     "TN": "#2ca02c",      # Green
-    "STM": "#d62728",     # Red
-    "cost": "#9467bd"     # Purple
+    "I": "#d62728",     # Red
+    "STM": "#9467bd"     # Purple
 }
 
     # Create subplot with two rows: linear and log scale
