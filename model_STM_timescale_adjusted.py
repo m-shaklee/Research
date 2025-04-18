@@ -48,8 +48,8 @@ app.layout = html.Div([
             dcc.Slider(id='S0', min=0, max=5*10**8, step=10*2, value=4*10**8,
                        marks={round(i, 1): f"{i:.1f}" for i in np.linspace(0,  5*10**8, 6)}),
             html.Label("I0:"),
-            dcc.Slider(id='I0', min=0, max=1*10**8, step=10*2, value=10**6,
-                       marks={round(i, 2): f"{i:.2f}" for i in np.linspace(0,  1*10**8, 6)}),
+            dcc.Slider(id='I0', min=0, max=100, step=10, value=10,
+                       marks={round(i, 2): f"{i:.2f}" for i in np.linspace(0,  100, 6)}),
             html.Label("TN0:"),
             dcc.Slider(id='TN0', min=0, max=2*10**8, step=1, value=1*10**8,
                        marks={round(i, 2): f"{i:.2f}" for i in np.linspace(0,  2*10**8, 6)}),
@@ -236,15 +236,15 @@ def update_graph(S0, I0, TN0, STM0, alpha, beta, delta, delta_N, delta_STM, c_N,
 
     # Add annotations above the plot
     figure.add_annotation(
-        x=0.5, y=1.15, xref="paper", yref="paper", showarrow=False,
+        x=0.5, y=1.11, xref="paper", yref="paper", showarrow=False,
         text=title_text, font=dict(size=28), align="center"
     )
     figure.add_annotation(
-        x=0.5, y=1.10, xref="paper", yref="paper", showarrow=False,
+        x=0.5, y=1.6, xref="paper", yref="paper", showarrow=False,
         text=sub_text1, font=dict(size=24), align="center"
     )
     figure.add_annotation(
-        x=0.5, y=1.06, xref="paper", yref="paper", showarrow=False,
+        x=0.5, y=1.01, xref="paper", yref="paper", showarrow=False,
         text=sub_text2, font=dict(size=24), align="center"
     )
     return figure
