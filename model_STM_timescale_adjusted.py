@@ -193,7 +193,7 @@ def update_graph(S0, I0, TN0, STM0, alpha, beta, delta, delta_N, delta_STM, c_N,
     figure = make_subplots(
         rows=2, cols=1,
         shared_xaxes=True,
-        vertical_spacing=0.15,
+        vertical_spacing=0.5,
         # subplot_titles=("Linear Scale", "Logarithmic Scale (y-axis)")
     )
 
@@ -237,11 +237,11 @@ def update_graph(S0, I0, TN0, STM0, alpha, beta, delta, delta_N, delta_STM, c_N,
 
     # Add annotations above the plot
     figure.add_annotation(
-        x=0.5, y=1.3, xref="paper", yref="paper", showarrow=False,
+        x=0.5, y=1.08, xref="paper", yref="paper", showarrow=False,
         text=title_text, font=dict(size=28), align="center"
     )
     figure.add_annotation(
-        x=0.5, y=1.2, xref="paper", yref="paper", showarrow=False,
+        x=0.5, y=1.05, xref="paper", yref="paper", showarrow=False,
         text=sub_text1, font=dict(size=24), align="center"
     )
     figure.add_annotation(
