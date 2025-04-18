@@ -218,6 +218,7 @@ def update_graph(S0, I0, TN0, STM0, alpha, beta, delta, delta_N, delta_STM, c_N,
     figure.update_layout(
         height=2000,
         title_font=dict(size=24),
+        margin=dict(t=250),
         # xaxis_title="Time",
         yaxis_title="Cells/Cost (linear)",
         xaxis2_title="Days",
