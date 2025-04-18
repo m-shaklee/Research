@@ -74,7 +74,7 @@ app.layout = html.Div([
             # dcc.Slider(id='beta', min=0, max=5*10**-6, step=0.1*10**-6, value=1.5*10**-6,
             #            marks={i: f"{i:.0e}" for i in np.linspace(0, 5e-6, 6)}),
             html.Label("β: Infectivity (e-9)"),
-            dcc.Slider(id='beta', min=0, max=10, step=0.5, value=0.5,
+            dcc.Slider(id='beta', min=0, max=10, step=0.5, value=6.5,
                        marks={round(i, 2): f"{i:.2f}" for i in np.linspace(0, 10, 6)}),
             # html.Label("δ: Infected cell death"),
             # dcc.Slider(id='delta', min=0, max=1*10**-6, step=0.1*10**-6, value=0.5*10**-6,
@@ -86,13 +86,13 @@ app.layout = html.Div([
             # dcc.Slider(id='delta_STM', min=0, max=1*10**-6, step=0.1*10**-6, value=0.5*10**-6,
             #            marks={round(i, 6): f"{i:.6f}" for i in np.linspace(0, 1*10**-6, 6)}),
             html.Label("δ: Infected cell death (e-8)"),
-            dcc.Slider(id='delta', min=0, max=10, step=0.5, value=0.5,
+            dcc.Slider(id='delta', min=0, max=10, step=0.5, value=5,
                        marks={round(i, 2): f"{i:.2f}" for i in np.linspace(0, 10, 6)}),
             html.Label("δ_TN: Infected cell death by TN (e-8)"),
-            dcc.Slider(id='delta_N', min=0, max=10, step=0.5, value=0.5,
+            dcc.Slider(id='delta_N', min=0, max=10, step=0.5, value=2,
                        marks={round(i, 2): f"{i:.2f}" for i in np.linspace(0, 10, 6)}),
             html.Label("δ_STM: Infected cell death by STM (e-8)"),
-            dcc.Slider(id='delta_STM', max=10, step=0.5, value=0.5,
+            dcc.Slider(id='delta_STM', max=10, step=0.5, value=5,
                        marks={round(i, 2): f"{i:.2f}" for i in np.linspace(0, 10, 6)}),
             html.Label("c_N: Proportion of susceptible cell death by TN to infected cell death"),
             dcc.Slider(id='c_N', min=0, max=1, step=0.01, value=0.005,
@@ -140,7 +140,7 @@ def update_graph(S0, I0, TN0, STM0, alpha, beta, delta, delta_N, delta_STM, c_N,
     figure.add_trace(go.Scatter(x=t_values, y=I_values, name="Infected (I)",line=dict(width=8)))
     figure.add_trace(go.Scatter(x=t_values, y=TN_values, name="TN",line=dict(width=4)))
     figure.add_trace(go.Scatter(x=t_values, y=STM_values, name="STM",line=dict(width=4)))
-    # figure.add_trace(go.Scatter(x=t_values, y=cumulative_cost, name="cost",line=dict(width=4)))
+    figure.add_trace(go.Scatter(x=t_values, y=cumulative_cost, name="cost",line=dict(width=4)))
     # figure.add_trace(go.Scatter(x=t_values, y=S_cost, name="S cost",line=dict(width=4)))
     # figure.add_trace(go.Scatter(x=t_values, y=I_cost, name="I cost",line=dict(width=4)))
 
