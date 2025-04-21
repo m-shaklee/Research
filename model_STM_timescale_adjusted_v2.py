@@ -151,7 +151,7 @@ def update_graph(S0, I0, TN0, STM0, alpha, beta, delta, delta_N, delta_STM, c_N,
         sol = solve_ivp(
             lambda t, y: system_no_STM(t_span, y0, beta, delta, delta_N, c_N),
             t_span, y0, t_eval=t_eval, method='Radau')
-            STM = np.zeros_like(t)
+        STM = np.zeros_like(t)
         # Insert STM as 4th row (after TN), so we match full system's order
         y = np.insert(y, 3, STM, axis=0)
 
