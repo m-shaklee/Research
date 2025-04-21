@@ -31,7 +31,15 @@ def system(t, y, alpha, beta, delta, delta_N, delta_STM, c_N, c_STM):
     dCost = np.abs(cost_I + cost_S)  # Total cost at this step
     dCost_S = np.abs(cost_S)
     dCost_I = np.abs(cost_I)
-    return [dS, dI, chgTN, chgSTM, dCost, dCost_S, dCost_I]
+    return [
+    dS,
+    dI,
+    chgTN,
+    chgSTM if STM > 0 or chgSTM != 0 else 0,
+    dCost,
+    dCost_S,
+    dCost_I
+    ]
 
 
 # Time span
