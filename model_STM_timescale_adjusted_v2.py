@@ -34,7 +34,7 @@ def system(t, y, alpha, beta, delta, delta_N, delta_STM, c_N, c_STM):
 
 # Time span
 t_span = (0, 21)  # Simulate from t=0 to t=50
-t_eval = np.linspace(0, 21, 2000)  # Time points for evaluation
+t_eval = np.linspace(0, 21, 20000)  # Time points for evaluation
 # Create the Dash app
 app = dash.Dash(__name__)
 
@@ -123,7 +123,7 @@ def update_graph(S0, I0, TN0, STM0, alpha, beta, delta, delta_N, delta_STM, c_N,
     delta_N=delta_N*1e-7
     delta_STM=delta_STM*1e-7
     sol = solve_ivp(system, t_span, y0, args=(alpha, beta, delta, delta_N, delta_STM, c_N, c_STM),
-                     t_eval=t_eval, method='RK45')
+                     t_eval=t_eval, method='Radau')
     
     # Extract solutions
     t_values = sol.t
