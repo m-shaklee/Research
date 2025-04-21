@@ -7,52 +7,31 @@ import plotly.graph_objs as go
 from plotly.subplots import make_subplots
 import os
 
-def system(t, y, alpha, beta, delta, delta_N, delta_STM, c_N, c_STM):
+def system_no_STM(t, y, alpha, beta, delta, delta_N, delta_STM, c_N, c_STM):
     S, I, TN, STM, cost, costS, costI = y  # Unpack state variables
     
     S = max(S, 0)
     I = max(I, 0)
     TN = max(TN, 0)
-    STM = max(STM, 0)
-    STM = 0 if STM < 1e-10 else STM
+    STM = 0
 
     dN = c_N*delta_N
-    dSTM = c_STM*delta_STM
+    dSTM = 0
     # Compute derivatives
     chgTN = -alpha * I
     # chgSTM = alpha * I
-    chgSTM = 0 if (alpha == 0 or I < 1e-12) else alpha * I
+    chgSTM = 0 
     dI = beta * S * I - delta * I - delta_N * TN * I - delta_STM * STM * I
     dS = -beta * S * I - dN * TN * S - dSTM * STM * S
     
     # Compute instantaneous cost
-    cost_I = -delta * I - delta_N * TN * I - delta_STM * STM * I
-    cost_S = -dN * TN * S - dSTM * STM * S
+    cost_I = -delta * I - delta_N * TN * I 
+    cost_S = -dN * TN * S 
     dCost = np.abs(cost_I + cost_S)  # Total cost at this step
     dCost_S = np.abs(cost_S)
     dCost_I = np.abs(cost_I)
-    return [dS, dI, chgTN, chgSTM, dCost, dCost_S, dCost_I]
+    return dS, dI,chgTN,chgSTM,dCost,dCost_S,dCost_I
 
-def system_no_STM(t, y, beta, delta, delta_N, c_N):
-    S, I, TN, cost, costS, costI = y
-
-    S = max(S, 0)
-    I = max(I, 0)
-    TN = max(TN, 0)
-
-    dN = c_N * delta_N
-
-    dI = beta * S * I - delta * I - delta_N * TN * I
-    dS = -beta * S * I - dN * TN * S
-    chgTN = 0  # TN is static here
-
-    cost_I = -delta * I - delta_N * TN * I
-    cost_S = -dN * TN * S
-    dCost = np.abs(cost_I + cost_S)
-    dCost_S = np.abs(cost_S)
-    dCost_I = np.abs(cost_I)
-
-    return [dS, dI, chgTN, dCost, dCost_S, dCost_I]
 
 # Time span
 t_span = (0, 21)  # Simulate from t=0 to t=50
@@ -61,7 +40,7 @@ t_eval = np.linspace(0, 21, 1000)  # Time points for evaluation
 app = dash.Dash(__name__)
 
 app.layout = html.Div([
-    html.H2("STM system timescale adjusted"),
+    html.H2("no STM system timescale adjusted"),
 
     html.Div([
         # LEFT COLUMN
@@ -91,7 +70,7 @@ app.layout = html.Div([
         # RIGHT COLUMN (sliders only)
         html.Div([
             html.Label("α: TN to STM"),
-            dcc.Slider(id='alpha', min=0, max=0.5, step=0.01, value=0.3,
+            dcc.Slider(id='alpha', min=0, max=0.5, step=0.01, value=0,
                        marks={round(i, 2): f"{i:.2f}" for i in np.linspace(0, 0.5, 6)}),
             # html.Label("β: Infectivity"),
             # dcc.Slider(id='beta', min=0, max=5*10**-6, step=0.1*10**-6, value=1.5*10**-6,
@@ -144,32 +123,18 @@ def update_graph(S0, I0, TN0, STM0, alpha, beta, delta, delta_N, delta_STM, c_N,
     delta=delta*1e-7
     delta_N=delta_N*1e-7
     delta_STM=delta_STM*1e-7
-    # sol = solve_ivp(system, t_span, y0, args=(alpha, beta, delta, delta_N, delta_STM, c_N, c_STM),
-                    #  t_eval=t_eval, method='Radau')
-    if alpha == 0:
-        y0 = [S0, I0, TN0, 0, 0, 0]  # no STM, 6 vars
-        sol = solve_ivp(
-            lambda t, y: system_no_STM(t_span, y0, beta, delta, delta_N, c_N),
-            t_span, y0, t_eval=t_eval, method='Radau')
-        STM = np.zeros_like(t)
-        # Insert STM as 4th row (after TN), so we match full system's order
-        y = np.insert(y, 3, STM, axis=0)
-
-    else:
-        y0 = [S0, I0, TN0, STM0, 0, 0, 0]  # full model, 7 vars
-        sol = solve_ivp(
-            lambda t, y: system(t_span, y0, alpha, beta, delta, delta_N, delta_STM, c_N, c_STM),
-            t_span, y0, t_eval=t_eval, method='Radau')
+    sol = solve_ivp(system_no_STM, t_span, y0, args=(alpha, beta, delta, delta_N, delta_STM, c_N, c_STM),
+                     t_eval=t_eval, method='Radau')
     
-        # Extract solutions
+    # Extract solutions
     t_values = sol.t
-        # X, c = sol.y
+    # X, c = sol.y
     S_values, I_values, TN_values, STM_values, cumulative_cost, S_cost, I_cost = sol.y
 
     title_text = 'Dynamics of Infection Over Time'
     sub_text1=(f'Final cumulative cost: {np.round(np.sum(cumulative_cost),2)} S0 = {y0[0]}, I0 = {y0[1]}, TN0 = {y0[2]}, STM0 = {y0[3]}')
     sub_text2=(f' α={alpha}, β={beta}, δ={delta}, δ_N={delta_N}, δ_STM={delta_STM}, c_N={c_N}, c_STM={c_STM}')
-        
+    
 
     # Create the plot
 #     figure = go.Figure()
