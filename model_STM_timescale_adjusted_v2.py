@@ -14,6 +14,7 @@ def system(t, y, alpha, beta, delta, delta_N, delta_STM, c_N, c_STM):
     I = max(I, 0)
     TN = max(TN, 0)
     STM = max(STM, 0)
+    STM = 0 if STM < 1e-10 else STM
     
     dN = c_N*delta_N
     dSTM = c_STM*delta_STM
