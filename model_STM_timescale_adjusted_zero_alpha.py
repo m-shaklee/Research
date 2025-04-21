@@ -32,6 +32,31 @@ def system_no_STM(t, y, alpha, beta, delta, delta_N, delta_STM, c_N, c_STM):
     dCost_I = np.abs(cost_I)
     return dS, dI,chgTN,chgSTM,dCost,dCost_S,dCost_I
 
+def system(t, y, alpha, beta, delta, delta_N, delta_STM, c_N, c_STM):
+    S, I, TN, STM, cost, costS, costI = y  # Unpack state variables
+    
+    S = max(S, 0)
+    I = max(I, 0)
+    TN = max(TN, 0)
+    STM = max(STM, 0)
+    STM = 0 if STM < 1e-10 else STM
+
+    dN = c_N*delta_N
+    dSTM = c_STM*delta_STM
+    # Compute derivatives
+    chgTN = -alpha * I
+    # chgSTM = alpha * I
+    chgSTM = 0 if (alpha == 0 or I < 1e-12) else alpha * I
+    dI = beta * S * I - delta * I - delta_N * TN * I - delta_STM * STM * I
+    dS = -beta * S * I - dN * TN * S - dSTM * STM * S
+    
+    # Compute instantaneous cost
+    cost_I = -delta * I - delta_N * TN * I - delta_STM * STM * I
+    cost_S = -dN * TN * S - dSTM * STM * S
+    dCost = np.abs(cost_I + cost_S)  # Total cost at this step
+    dCost_S = np.abs(cost_S)
+    dCost_I = np.abs(cost_I)
+    return dS, dI,chgTN,chgSTM,dCost,dCost_S,dCost_I
 
 # Time span
 t_span = (0, 21)  # Simulate from t=0 to t=50
@@ -107,6 +132,16 @@ app.layout = html.Div([
 
     html.Br(),
     # dcc.Graph(id='output-graph')
+    html.Label("System Mode:"),
+    dcc.RadioItems(
+    id='system_mode',
+    options=[
+        {'label': 'With STM', 'value': 'with_stm'},
+        {'label': 'Without STM (α = 0)', 'value': 'no_stm'}
+    ],
+    value='with_stm',
+    labelStyle={'display': 'inline-block', 'margin-right': '20px'}
+),
     dcc.Graph(id='output-graph', style={'height': '2000px', 'width': '100%'})
 ])
 # Callback to update the plot
@@ -114,16 +149,19 @@ app.layout = html.Div([
     Output('output-graph', 'figure'),
     [Input('S0', 'value'),Input('I0', 'value'),Input('TN0', 'value'),Input('STM0', 'value'),Input('alpha', 'value'), Input('beta', 'value'), Input('delta', 'value'),
      Input('delta_N', 'value'), Input('delta_STM', 'value'), Input('c_N', 'value'),
-     Input('c_STM', 'value')]
+     Input('c_STM', 'value'),Input('system_mode', 'value')]
 )
 # def update_graph(alpha, beta, delta, delta_N, delta_STM, dN, dSTM,S0,I0,TN0,STM0):
-def update_graph(S0, I0, TN0, STM0, alpha, beta, delta, delta_N, delta_STM, c_N, c_STM):
+def update_graph(S0, I0, TN0, STM0, alpha, beta, delta, delta_N, delta_STM, c_N, c_STM, system_mode):
     y0=[S0,I0,TN0,STM0,0,0,0]
     beta=beta*1e-9
     delta=delta*1e-7
     delta_N=delta_N*1e-7
     delta_STM=delta_STM*1e-7
-    sol = solve_ivp(system_no_STM, t_span, y0, args=(alpha, beta, delta, delta_N, delta_STM, c_N, c_STM),
+
+    system_func = system if system_mode == 'with_stm' else system_no_STM
+
+    sol = solve_ivp(system_func, t_span, y0, args=(alpha, beta, delta, delta_N, delta_STM, c_N, c_STM),
                      t_eval=t_eval, method='Radau')
     
     # Extract solutions
