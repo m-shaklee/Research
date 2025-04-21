@@ -19,7 +19,8 @@ def system(t, y, alpha, beta, delta, delta_N, delta_STM, c_N, c_STM):
     dSTM = c_STM*delta_STM
     # Compute derivatives
     chgTN = -alpha * I
-    chgSTM = alpha * I
+    # chgSTM = alpha * I
+    chgSTM = 0 if alpha == 0 else alpha * I
     dI = beta * S * I - delta * I - delta_N * TN * I - delta_STM * STM * I
     dS = -beta * S * I - dN * TN * S - dSTM * STM * S
     
