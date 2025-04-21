@@ -15,13 +15,13 @@ def system(t, y, alpha, beta, delta, delta_N, delta_STM, c_N, c_STM):
     TN = max(TN, 0)
     STM = max(STM, 0)
     STM = 0 if STM < 1e-10 else STM
-    
+
     dN = c_N*delta_N
     dSTM = c_STM*delta_STM
     # Compute derivatives
     chgTN = -alpha * I
     # chgSTM = alpha * I
-    chgSTM = 0 if alpha == 0 else alpha * I
+    chgSTM = 0 if (alpha == 0 or I < 1e-12) else alpha * I
     dI = beta * S * I - delta * I - delta_N * TN * I - delta_STM * STM * I
     dS = -beta * S * I - dN * TN * S - dSTM * STM * S
     
@@ -36,7 +36,7 @@ def system(t, y, alpha, beta, delta, delta_N, delta_STM, c_N, c_STM):
 
 # Time span
 t_span = (0, 21)  # Simulate from t=0 to t=50
-t_eval = np.linspace(0, 21, 20000)  # Time points for evaluation
+t_eval = np.linspace(0, 21, 1000)  # Time points for evaluation
 # Create the Dash app
 app = dash.Dash(__name__)
 
