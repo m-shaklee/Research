@@ -18,7 +18,7 @@ def system_no_STM(t, y, alpha, beta, delta, delta_N, delta_STM, c_N, c_STM):
     dN = c_N*delta_N
     dSTM = 0
     # Compute derivatives
-    chgTN = -alpha * I
+    chgTN = 0
     # chgSTM = alpha * I
     chgSTM = 0 
     dI = beta * S * I - delta * I - delta_N * TN * I - delta_STM * STM * I
@@ -95,8 +95,8 @@ app.layout = html.Div([
         # RIGHT COLUMN (sliders only)
         html.Div([
             html.Label("α: TN to STM"),
-            dcc.Slider(id='alpha', min=0, max=0.5, step=0.01, value=0,
-                       marks={round(i, 2): f"{i:.2f}" for i in np.linspace(0, 0.5, 6)}),
+            dcc.Slider(id='alpha', min=0.001, max=0.5, step=0.01, value=0.3,
+                       marks={round(i, 2): f"{i:.2f}" for i in np.linspace(0.001, 0.5, 6)}),
             # html.Label("β: Infectivity"),
             # dcc.Slider(id='beta', min=0, max=5*10**-6, step=0.1*10**-6, value=1.5*10**-6,
             #            marks={i: f"{i:.0e}" for i in np.linspace(0, 5e-6, 6)}),
