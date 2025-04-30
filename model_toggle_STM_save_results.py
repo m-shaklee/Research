@@ -141,12 +141,6 @@ app.layout = html.Div([
 ])
 # Callback to update the plot
 @app.callback(
-    Output('output-graph', 'figure'),
-    [Input('S0', 'value'),Input('I0', 'value'),Input('TN0', 'value'),Input('STM0', 'value'),Input('alpha', 'value'), Input('beta', 'value'), Input('delta', 'value'),
-     Input('delta_N', 'value'), Input('delta_STM', 'value'), Input('c_N', 'value'),
-     Input('c_STM', 'value'),Input('system_mode', 'value')]
-)
-@app.callback(
     Output("download-csv", "data"),
     Input("download-btn", "n_clicks"),
     State('S0', 'value'),
@@ -206,6 +200,12 @@ def download_csv(n_clicks, S0, I0, TN0, STM0, alpha, beta, delta, delta_N, delta
     output.seek(0)
 
     return dcc.send_data_frame(lambda: output, filename=f"{system_mode}_simulation.csv")
+@app.callback(
+    Output('output-graph', 'figure'),
+    [Input('S0', 'value'),Input('I0', 'value'),Input('TN0', 'value'),Input('STM0', 'value'),Input('alpha', 'value'), Input('beta', 'value'), Input('delta', 'value'),
+     Input('delta_N', 'value'), Input('delta_STM', 'value'), Input('c_N', 'value'),
+     Input('c_STM', 'value'),Input('system_mode', 'value')]
+)
 # def update_graph(alpha, beta, delta, delta_N, delta_STM, dN, dSTM,S0,I0,TN0,STM0):
 def update_graph(S0, I0, TN0, STM0, alpha, beta, delta, delta_N, delta_STM, c_N, c_STM, system_mode):
     y0=[S0,I0,TN0,STM0,0,0,0]
