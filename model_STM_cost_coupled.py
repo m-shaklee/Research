@@ -5,6 +5,9 @@ import numpy as np
 from scipy.integrate import solve_ivp
 import plotly.graph_objs as go
 import os
+from dash import State
+import io
+import base64
 
 def system(t, y, alpha, beta, delta, delta_N, delta_STM, c_N, c_STM):
     S, I, TN, STM, cost, costS, costI = y  # Unpack state variables
@@ -110,6 +113,7 @@ app.layout = html.Div([
      Input('delta_N', 'value'), Input('delta_STM', 'value'), Input('c_N', 'value'),
      Input('c_STM', 'value')]
 )
+
 # def update_graph(alpha, beta, delta, delta_N, delta_STM, dN, dSTM,S0,I0,TN0,STM0):
 def update_graph(S0, I0, TN0, STM0, alpha, beta, delta, delta_N, delta_STM, c_N, c_STM):
     y0=[S0,I0,TN0,STM0,0,0,0]

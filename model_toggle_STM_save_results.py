@@ -1,3 +1,4 @@
+#Date: 04/30/25
 import dash 
 from dash import dcc, html
 from dash.dependencies import Input, Output
@@ -6,6 +7,10 @@ from scipy.integrate import solve_ivp
 import plotly.graph_objs as go
 from plotly.subplots import make_subplots
 import os
+from dash import State
+import io
+import base64
+
 
 def system_no_STM(t, y, alpha, beta, delta, delta_N, delta_STM, c_N, c_STM):
     S, I, TN, STM, cost, costS, costI = y  # Unpack state variables
@@ -130,6 +135,8 @@ app.layout = html.Div([
     value='with_stm',
     labelStyle={'display': 'inline-block', 'margin-right': '20px'}
 ),
+    html.Button("Download CSV", id="download-btn", n_clicks=0),
+    dcc.Download(id="download-csv"),
     dcc.Graph(id='output-graph', style={'height': '2000px', 'width': '100%'})
 ])
 # Callback to update the plot
@@ -139,6 +146,66 @@ app.layout = html.Div([
      Input('delta_N', 'value'), Input('delta_STM', 'value'), Input('c_N', 'value'),
      Input('c_STM', 'value'),Input('system_mode', 'value')]
 )
+@app.callback(
+    Output("download-csv", "data"),
+    Input("download-btn", "n_clicks"),
+    State('S0', 'value'),
+    State('I0', 'value'),
+    State('TN0', 'value'),
+    State('STM0', 'value'),
+    State('alpha', 'value'),
+    State('beta', 'value'),
+    State('delta', 'value'),
+    State('delta_N', 'value'),
+    State('delta_STM', 'value'),
+    State('c_N', 'value'),
+    State('c_STM', 'value'),
+    State('system_mode', 'value'),
+    prevent_initial_call=True
+)
+def download_csv(n_clicks, S0, I0, TN0, STM0, alpha, beta, delta, delta_N, delta_STM, c_N, c_STM, system_mode):
+    # Rerun simulation to get results
+    y0 = [S0, I0, TN0, STM0, 0, 0, 0]
+    beta_adj = beta * 1e-9
+    delta_adj = delta * 1e-7
+    delta_N_adj = delta_N * 1e-7
+    delta_STM_adj = delta_STM * 1e-7
+
+    system_func = system if system_mode == 'with_stm' else system_no_STM
+    sol = solve_ivp(system_func, t_span, y0, args=(alpha, beta_adj, delta_adj, delta_N_adj, delta_STM_adj, c_N, c_STM), t_eval=t_eval, method='Radau')
+
+    t_values = sol.t
+    S_values, I_values, TN_values, STM_values, cumulative_cost, S_cost, I_cost = sol.y
+
+    # Prepare metadata as a header string
+    metadata = [
+        f"S0: {S0}", f"I0: {I0}", f"TN0: {TN0}", f"STM0: {STM0}",
+        f"alpha: {alpha}", f"beta: {beta_adj}", f"delta: {delta_adj}",
+        f"delta_N: {delta_N_adj}", f"delta_STM: {delta_STM_adj}",
+        f"c_N: {c_N}", f"c_STM: {c_STM}", f"system_mode: {system_mode}"
+    ]
+    
+    # Create CSV content in-memory
+    output = io.StringIO()
+    output.write("# Simulation Parameters\n")
+    for line in metadata:
+        output.write(f"# {line}\n")
+
+    # Create DataFrame
+    df = pd.DataFrame({
+        "Time": t_values,
+        "Susceptible (S)": S_values,
+        "Infected (I)": I_values,
+        "TN": TN_values,
+        "STM": STM_values,
+        "Cumulative Cost": cumulative_cost,
+        "S Cost": S_cost,
+        "I Cost": I_cost
+    })
+    df.to_csv(output, index=False)
+    output.seek(0)
+
+    return dcc.send_data_frame(lambda: output, filename=f"{system_mode}_simulation.csv")
 # def update_graph(alpha, beta, delta, delta_N, delta_STM, dN, dSTM,S0,I0,TN0,STM0):
 def update_graph(S0, I0, TN0, STM0, alpha, beta, delta, delta_N, delta_STM, c_N, c_STM, system_mode):
     y0=[S0,I0,TN0,STM0,0,0,0]
