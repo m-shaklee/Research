@@ -200,7 +200,7 @@ def download_csv(n_clicks, S0, I0, TN0, STM0, alpha, beta, delta, delta_N, delta
     df.to_csv(output, index=False)
     output.seek(0)
 
-    return dcc.send_data_frame(lambda: output, filename=f"{system_mode}_simulation.csv")
+    return dcc.send_string(output.getvalue(), filename=f"{system_mode}_simulation.csv")
 @app.callback(
     Output('output-graph', 'figure'),
     [Input('S0', 'value'),Input('I0', 'value'),Input('TN0', 'value'),Input('STM0', 'value'),Input('alpha', 'value'), Input('beta', 'value'), Input('delta', 'value'),
