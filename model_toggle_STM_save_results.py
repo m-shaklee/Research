@@ -10,6 +10,7 @@ import os
 from dash import State
 import io
 import base64
+import pandas as pd
 
 
 def system_no_STM(t, y, alpha, beta, delta, delta_N, delta_STM, c_N, c_STM):
