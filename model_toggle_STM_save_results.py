@@ -199,8 +199,10 @@ def download_csv(n_clicks, S0, I0, TN0, STM0, alpha, beta, delta, delta_N, delta
     })
     df.to_csv(output, index=False)
     output.seek(0)
-
-    return dcc.send_string(output.getvalue(), filename=f"{system_mode}_simulation.csv")
+    filename_metadata = f"S{S0}_I{I0}_TN{TN0}_STM{STM0}_a{alpha}_b{beta_adj}_d{delta_adj}_dN{delta_N_adj}_dSTM{delta_STM_adj}_cN{c_N}_cSTM{c_STM}_{system_mode}"
+    filename_metadata = filename_metadata.replace('.', 'p')  # replace decimal points to avoid issues
+    filename = f"simulation_{filename_metadata}.csv"
+    return dcc.send_string(output.getvalue(), filename=filename)
 @app.callback(
     Output('output-graph', 'figure'),
     [Input('S0', 'value'),Input('I0', 'value'),Input('TN0', 'value'),Input('STM0', 'value'),Input('alpha', 'value'), Input('beta', 'value'), Input('delta', 'value'),
