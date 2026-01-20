@@ -23,7 +23,7 @@ def activation_probability_simple_KP(KD_uM, N=2.67, tau_total=2.8, kon=1e5):
     # return float(np.clip((tau_b / (tau_b + tau_step)) ** N, 0.0, 1.0))
     return np.clip((tau_b / (tau_b + tau_step)) ** N, 0.0, 1.0)
 
-def activation_probability(C_N, threshold=1.0):
+def activation_probability_from_CN(C_N, threshold=1.0):
     return 1 - np.exp(-C_N / threshold)
 
 def find_responsive_affinities(KD_start, L0, R0, N, kp, memory_gain, threshold=0.5):
@@ -31,7 +31,7 @@ def find_responsive_affinities(KD_start, L0, R0, N, kp, memory_gain, threshold=0
     kp_eff = kp * memory_gain
     KD_range = np.logspace(-2, 3, 500)  # from 0.01 uM to 1000 uM
     C_N_vals = kp_activation_probability_concentration(KD_range, L0, R0, N, kp_eff)
-    P_vals = activation_probability(C_N_vals)
+    P_vals = activation_probability_from_CN(C_N_vals)
     
     responsive_KD = KD_range[P_vals >= threshold]
     return responsive_KD, P_vals, KD_range
