@@ -164,7 +164,7 @@ app.layout = html.Div([
 ])
 
 # =========================
-# Callback for equations
+# Callbacks
 # =========================
 
 @app.callback(
@@ -221,11 +221,6 @@ def update_equations(model):
             ], style={'fontSize': '12px', 'fontStyle': 'italic', 'marginTop': '10px'})
         ])
 
-
-# =========================
-# Callback for plots
-# =========================
-
 @app.callback(
     Output('activation-curve', 'figure'),
     Output('quantitative-summary', 'children'),
@@ -241,7 +236,59 @@ def update_equations(model):
     Input('L0', 'value'),
     Input('R0', 'value')
 )
-def update_plots(model, tau_range, N_range, N_ref, tau_ref, KD_threshold, L0, R0):
+def update_all_plots(model, tau_range, N_range, N_ref, tau_ref, KD_threshold, L0, R0):
+    
+    # ============================================
+    # EQUATIONS DISPLAY
+    # ============================================
+    if model == 'simple':
+        equations = html.Div([
+            html.P([
+                html.Strong("Simplified Kinetic Proofreading Model"),
+                html.Br(),
+                "Assumes single ligand binding, no concentration dependence"
+            ]),
+            html.P([
+                "τ", html.Sub("b"), " = 1/k", html.Sub("off"), " = 1/(K", html.Sub("D"), " × k", html.Sub("on"), ")"
+            ], style={'marginTop': '10px'}),
+            html.P([
+                "τ", html.Sub("step"), " = τ / N"
+            ]),
+            html.P([
+                html.Strong("P(activation) = "),
+                "(τ", html.Sub("b"), " / (τ", html.Sub("b"), " + τ", html.Sub("step"), "))", html.Sup("N")
+            ], style={'fontSize': '16px', 'marginTop': '10px'}),
+            html.P([
+                "where k", html.Sub("on"), " = 10⁵ M⁻¹s⁻¹ (fixed)"
+            ], style={'fontSize': '12px', 'fontStyle': 'italic', 'marginTop': '10px'})
+        ])
+    else:
+        equations = html.Div([
+            html.P([
+                html.Strong("Concentration-Dependent Kinetic Proofreading Model"),
+                html.Br(),
+                "From Pettmann et al. (2021) - Equations 2 & 3"
+            ]),
+            html.P([
+                "k", html.Sub("p"), " = 1/τ"
+            ], style={'marginTop': '10px'}),
+            html.P([
+                "C", html.Sub("tot"), " = [L₀ + R₀ + k", html.Sub("off"), "/k", html.Sub("on"), 
+                " - √((L₀ + R₀ + k", html.Sub("off"), "/k", html.Sub("on"), ")² - 4L₀R₀)] / 2"
+            ]),
+            html.P([
+                "C", html.Sub("N"), " = C", html.Sub("tot"), " × (1 + k", html.Sub("off"), 
+                "/k", html.Sub("p"), ")", html.Sup("-N")
+            ]),
+            html.P([
+                html.Strong("P(activation) = "),
+                "1 - exp(-C", html.Sub("N"), "/C", html.Sub("N,threshold"), ")"
+            ], style={'fontSize': '16px', 'marginTop': '10px'}),
+            html.P([
+                "where L₀ = ligand concentration, R₀ = receptor count, ",
+                "C", html.Sub("N,threshold"), " = 1.0, k", html.Sub("on"), " = 10⁵ M⁻¹s⁻¹"
+            ], style={'fontSize': '12px', 'fontStyle': 'italic', 'marginTop': '10px'})
+        ])
 
     # ============================================
     # PART 1: ACTIVATION PROBABILITY VS AFFINITY
