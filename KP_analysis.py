@@ -31,61 +31,34 @@ def activation_probability_concentration(
     return np.clip(1 - np.exp(-C_N / threshold_CN), 0, 1)
 
 
-def KD_bounds_simple(N, tau, prob_thresh=0.5):
-    KD_vals = np.logspace(-2, 3, 1000)  # 0.01 - 1000 µM
-    P = activation_probability_simple(KD_vals, N, tau)
-    idx = np.where(P >= prob_thresh)[0]
-    if len(idx) == 0:
-        return np.nan, np.nan
-    return KD_vals[idx[0]], KD_vals[idx[-1]]
-
-def KD_bounds_concentration(N, tau, L0, R0, prob_thresh=0.5):
-    KD_vals = np.logspace(-2, 3, 1000)
-    P = activation_probability_concentration(KD_vals, N, tau, L0, R0)
-    idx = np.where(P >= prob_thresh)[0]
-    if len(idx) == 0:
-        return np.nan, np.nan
-    return KD_vals[idx[0]], KD_vals[idx[-1]]
-
-def KD_bounds_simple_for_slider(N, tau, KD_slider):
+def find_equivalent_KD(KD_threshold, N_new, tau_new, N_old, tau_old, model='simple', **kwargs):
     """
-    Given a slider KD value (µM), find all KD values
-    that would have an activation probability >=
-    P(KD_slider)
+    Find the KD that produces the same activation probability as KD_threshold
+    with old parameters (N_old, tau_old) when using new parameters (N_new, tau_new)
     """
-    KD_vals = np.logspace(-2, 3, 1000)  # 0.01 - 1000 µM
-    # Activation probability at the slider KD
-    P_thresh = activation_probability_simple(KD_slider, N, tau)
-    P = activation_probability_simple(KD_vals, N, tau)
-    idx = np.where(P >= P_thresh)[0]
-    if len(idx) == 0:
-        return np.nan, np.nan
-    return KD_vals[idx[0]], KD_vals[idx[-1]]
-
-def KD_bounds_concentration_for_slider(N, tau, L0, R0, KD_slider):
-    KD_vals = np.logspace(-2, 3, 1000)
-    P_thresh = activation_probability_concentration(KD_slider, N, tau, L0, R0)
-    P = activation_probability_concentration(KD_vals, N, tau, L0, R0)
-    idx = np.where(P >= P_thresh)[0]
-    if len(idx) == 0:
-        return np.nan, np.nan
-    return KD_vals[idx[0]], KD_vals[idx[-1]]
-
-# =========================
-# KD threshold finders
-# =========================
-
-def KD_threshold_simple(N, tau, prob_thresh=0.5):
-    KD_vals = np.logspace(-2, 3, 1000)
-    P = activation_probability_simple(KD_vals, N, tau)
-    idx = np.where(P >= prob_thresh)[0]
-    return KD_vals[idx[0]] if len(idx) > 0 else np.nan
-
-def KD_threshold_concentration(N, tau, L0, R0, prob_thresh=0.5):
-    KD_vals = np.logspace(-2, 3, 1000)
-    P = activation_probability_concentration(KD_vals, N, tau, L0, R0)
-    idx = np.where(P >= prob_thresh)[0]
-    return KD_vals[idx[0]] if len(idx) > 0 else np.nan
+    # Get target probability with threshold KD and old parameters
+    if model == 'simple':
+        P_target = activation_probability_simple(KD_threshold, N_old, tau_old)
+    else:
+        P_target = activation_probability_concentration(
+            KD_threshold, N_old, tau_old, 
+            kwargs.get('L0', 50), kwargs.get('R0', 50)
+        )
+    
+    # Search for KD with new parameters that gives same probability
+    KD_search = np.logspace(-2, 3, 2000)  # 0.01 to 1000 µM
+    
+    if model == 'simple':
+        P_search = activation_probability_simple(KD_search, N_new, tau_new)
+    else:
+        P_search = activation_probability_concentration(
+            KD_search, N_new, tau_new,
+            kwargs.get('L0', 50), kwargs.get('R0', 50)
+        )
+    
+    # Find closest match
+    idx = np.argmin(np.abs(P_search - P_target))
+    return KD_search[idx]
 
 # =========================
 # Dash app
@@ -122,12 +95,32 @@ app.layout = html.Div([
         marks={i: str(i) for i in range(1, 9)}
     ),
 
+    html.Br(),
+    html.H4("Reference Parameters (Original State)"),
+    
+    html.Label("Reference N (proofreading steps)"),
+    dcc.Slider(
+        id='N_ref',
+        min=1, max=8, step=1, value=2,
+        marks={i: str(i) for i in range(1, 9)}
+    ),
+    
+    html.Label("Reference τ (integration time)"),
+    dcc.Slider(
+        id='tau_ref',
+        min=0.5, max=10, step=0.25, value=2.0,
+        marks={i: str(i) for i in range(0, 11, 2)}
+    ),
+
     html.Label("Activation threshold KD (µM)"),
     dcc.Slider(
         id='KD_threshold',
         min=1, max=300, step=1, value=100,
         marks={1: '1', 50: '50', 100: '100', 300: '300'}
     ),
+
+    html.Br(),
+    html.H4("Additional Parameters"),
 
     html.Label("Ligand concentration L₀ (concentration KP only)"),
     dcc.Slider(id='L0', min=1, max=200, step=5, value=50),
@@ -138,37 +131,13 @@ app.layout = html.Div([
     html.Br(),
 
     dcc.Graph(id='KD-heatmap', style={'height': '500px'}),
-    dcc.Graph(id='KD-difference', style={'height': '500px'})
+    dcc.Graph(id='KD-difference', style={'height': '500px'}),
+    dcc.Graph(id='KD-range-size', style={'height': '500px'})
 ])
 
 # =========================
 # Callback
 # =========================
-
-# =========================
-# KD bounds finders
-# =========================
-
-def KD_bounds_simple(N, tau, prob_thresh=0.5):
-    KD_vals = np.logspace(-2, 3, 1000)  # 0.01 - 1000 µM
-    P = activation_probability_simple(KD_vals, N, tau)
-    idx = np.where(P >= prob_thresh)[0]
-    if len(idx) == 0:
-        return np.nan, np.nan
-    return KD_vals[idx[0]], KD_vals[idx[-1]]
-
-def KD_bounds_concentration(N, tau, L0, R0, prob_thresh=0.5):
-    KD_vals = np.logspace(-2, 3, 1000)
-    P = activation_probability_concentration(KD_vals, N, tau, L0, R0)
-    idx = np.where(P >= prob_thresh)[0]
-    if len(idx) == 0:
-        return np.nan, np.nan
-    return KD_vals[idx[0]], KD_vals[idx[-1]]
-
-# =========================
-# Dash callback
-# =========================
-
 @app.callback(
     Output('KD-heatmap', 'figure'),
     Output('KD-difference', 'figure'),
@@ -176,56 +145,53 @@ def KD_bounds_concentration(N, tau, L0, R0, prob_thresh=0.5):
     Input('kp_model', 'value'),
     Input('tau_range', 'value'),
     Input('N_range', 'value'),
-    Input('KD_threshold', 'value'),  # slider in µM
+    Input('N_ref', 'value'),
+    Input('tau_ref', 'value'),
+    Input('KD_threshold', 'value'),
     Input('L0', 'value'),
     Input('R0', 'value')
 )
-def update_plots(model, tau_range, N_range, KD_slider, L0, R0):
+def update_plots(model, tau_range, N_range, N_ref, tau_ref, KD_threshold, L0, R0):
 
     tau_vals = np.linspace(tau_range[0], tau_range[1], 80)
     N_vals = np.arange(N_range[0], N_range[1] + 1)
+    
+    KD_equiv = np.zeros((len(tau_vals), len(N_vals)))
 
-    KD_lower = np.zeros((len(tau_vals), len(N_vals)))
-    KD_upper = np.zeros((len(tau_vals), len(N_vals)))
-
-    # Compute KD bounds dynamically based on slider KD
+    # Calculate equivalent KD for each parameter combination
     for i, tau in enumerate(tau_vals):
         for j, N in enumerate(N_vals):
-            if model == 'simple':
-                lower, upper = KD_bounds_simple_for_slider(N, tau, KD_slider)
-            else:
-                lower, upper = KD_bounds_concentration_for_slider(N, tau, L0, R0, KD_slider)
-            KD_lower[i, j] = lower
-            KD_upper[i, j] = upper
-
-    # Activation range size
-    KD_range_size = KD_upper - KD_lower
+            KD_equiv[i, j] = find_equivalent_KD(
+                KD_threshold, N, tau, N_ref, tau_ref,
+                model=model, L0=L0, R0=R0
+            )
 
     # Log-scale for visualization
-    log_KD_upper = np.log10(KD_upper)
-    log_KD_range = np.log10(np.clip(KD_range_size, 1e-3, None))  # avoid log(0)
+    log_KD_equiv = np.log10(np.clip(KD_equiv, 1e-3, None))
 
-    # ---- Heatmap 1: Maximum KD ----
+    # ---- Heatmap 1: Maximum activatable KD ----
     fig1 = go.Figure(go.Heatmap(
         x=N_vals,
         y=tau_vals,
-        z=log_KD_upper,
+        z=log_KD_equiv,
         colorscale='Viridis',
-        colorbar=dict(title='log10(KD_upper µM)'),
-        zmin=np.nanmin(log_KD_upper),
-        zmax=np.nanmax(log_KD_upper)
+        colorbar=dict(title='log10(KD µM)'),
+        zmin=np.nanmin(log_KD_equiv),
+        zmax=np.nanmax(log_KD_equiv)
     ))
     fig1.update_layout(
-        title="Maximum activatable KD (upper bound)",
+        title=f"Equivalent KD with same activation as {KD_threshold} µM (N={N_ref}, τ={tau_ref})",
         xaxis_title="Proofreading steps (N)",
         yaxis_title="Integration time (τ)",
         template="plotly_white"
     )
 
-    # ---- Heatmap 2: New activations above 170 µM ----
-    neg_cutoff = 170
+    # ---- Heatmap 2: New activations above negative selection threshold ----
+    neg_cutoff = 170  # µM
     log_neg_cutoff = np.log10(neg_cutoff)
-    new_activation = np.where(KD_upper >= neg_cutoff, log_KD_upper, np.nan)
+    
+    # Only show regions where equivalent KD exceeds negative selection
+    new_activation = np.where(KD_equiv >= neg_cutoff, log_KD_equiv, np.nan)
 
     fig2 = go.Figure(go.Heatmap(
         x=N_vals,
@@ -234,35 +200,35 @@ def update_plots(model, tau_range, N_range, KD_slider, L0, R0):
         colorscale='Reds',
         colorbar=dict(title=f'log10(KD ≥ {neg_cutoff} µM)'),
         zmin=log_neg_cutoff,
-        zmax=np.nanmax(log_KD_upper)
+        zmax=np.nanmax(log_KD_equiv)
     ))
     fig2.update_layout(
-        title=f"New activations above {neg_cutoff} µM",
+        title=f"New activations above negative selection ({neg_cutoff} µM)",
         xaxis_title="Proofreading steps (N)",
         yaxis_title="Integration time (τ)",
         template="plotly_white"
     )
 
-    # ---- Heatmap 3: Activation range size ----
+    # ---- Heatmap 3: Fold change from threshold ----
+    fold_change = KD_equiv / KD_threshold
+    
     fig3 = go.Figure(go.Heatmap(
         x=N_vals,
         y=tau_vals,
-        z=KD_range_size,
+        z=fold_change,
         colorscale='Cividis',
-        colorbar=dict(title='KD_upper - KD_lower (µM)'),
-        zmin=np.nanmin(KD_range_size),
-        zmax=np.nanmax(KD_range_size)
+        colorbar=dict(title='Fold change'),
+        zmin=np.nanmin(fold_change),
+        zmax=np.nanmax(fold_change)
     ))
     fig3.update_layout(
-        title="Size of activation range (KD_upper - KD_lower)",
+        title=f"Fold expansion of antigen landscape (relative to {KD_threshold} µM)",
         xaxis_title="Proofreading steps (N)",
         yaxis_title="Integration time (τ)",
         template="plotly_white"
     )
 
     return fig1, fig2, fig3
-
-
 
 
 # =========================
