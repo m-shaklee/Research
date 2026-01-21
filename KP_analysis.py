@@ -70,6 +70,17 @@ app = dash.Dash(__name__)
 app.layout = html.Div([
 
     html.H2("Kinetic Proofreading: Antigenic Reach & Memory Gain"),
+    
+    html.Div([
+        html.H4("Model Equations"),
+        html.Div(id='equation-display', style={
+            'padding': '15px',
+            'backgroundColor': '#f0f0f0',
+            'borderRadius': '5px',
+            'fontFamily': 'monospace',
+            'marginBottom': '20px'
+        })
+    ]),
 
     dcc.RadioItems(
         id='kp_model',
@@ -102,14 +113,14 @@ app.layout = html.Div([
     html.Label("Reference N (proofreading steps)"),
     dcc.Slider(
         id='N_ref',
-        min=1, max=8, step=1, value=2.67,
+        min=1, max=8, step=1, value=2,
         marks={i: str(i) for i in range(1, 9)}
     ),
     
     html.Label("Reference τ (integration time)"),
     dcc.Slider(
         id='tau_ref',
-        min=0.5, max=10, step=0.25, value=2.8,
+        min=0.5, max=10, step=0.25, value=2.0,
         marks={i: str(i) for i in range(0, 11, 2)}
     ),
 
@@ -131,13 +142,72 @@ app.layout = html.Div([
 
     html.Br(),
 
-    dcc.Graph(id='KD-heatmap', style={'height': '1000px'}),
-    dcc.Graph(id='KD-difference', style={'height': '1000px'}),
-    dcc.Graph(id='KD-range-size', style={'height': '1000px'})
+    dcc.Graph(id='KD-heatmap', style={'height': '600px'}),
+    dcc.Graph(id='KD-difference', style={'height': '600px'}),
+    dcc.Graph(id='KD-range-size', style={'height': '600px'})
 ])
 
 # =========================
-# Callback
+# Callback for equations
+# =========================
+
+@app.callback(
+    Output('equation-display', 'children'),
+    Input('kp_model', 'value')
+)
+def update_equations(model):
+    if model == 'simple':
+        return html.Div([
+            html.P([
+                html.Strong("Simplified Kinetic Proofreading Model"),
+                html.Br(),
+                "Assumes single ligand binding, no concentration dependence"
+            ]),
+            html.P([
+                "τ", html.Sub("b"), " = 1/k", html.Sub("off"), " = 1/(K", html.Sub("D"), " × k", html.Sub("on"), ")"
+            ], style={'marginTop': '10px'}),
+            html.P([
+                "τ", html.Sub("step"), " = τ / N"
+            ]),
+            html.P([
+                html.Strong("P(activation) = "),
+                "(τ", html.Sub("b"), " / (τ", html.Sub("b"), " + τ", html.Sub("step"), "))", html.Sup("N")
+            ], style={'fontSize': '16px', 'marginTop': '10px'}),
+            html.P([
+                "where k", html.Sub("on"), " = 10⁵ M⁻¹s⁻¹ (fixed)"
+            ], style={'fontSize': '12px', 'fontStyle': 'italic', 'marginTop': '10px'})
+        ])
+    else:
+        return html.Div([
+            html.P([
+                html.Strong("Concentration-Dependent Kinetic Proofreading Model"),
+                html.Br(),
+                "From Pettmann et al. (2021) - Equations 2 & 3"
+            ]),
+            html.P([
+                "k", html.Sub("p"), " = 1/τ"
+            ], style={'marginTop': '10px'}),
+            html.P([
+                "C", html.Sub("tot"), " = [L₀ + R₀ + k", html.Sub("off"), "/k", html.Sub("on"), 
+                " - √((L₀ + R₀ + k", html.Sub("off"), "/k", html.Sub("on"), ")² - 4L₀R₀)] / 2"
+            ]),
+            html.P([
+                "C", html.Sub("N"), " = C", html.Sub("tot"), " × (1 + k", html.Sub("off"), 
+                "/k", html.Sub("p"), ")", html.Sup("-N")
+            ]),
+            html.P([
+                html.Strong("P(activation) = "),
+                "1 - exp(-C", html.Sub("N"), "/C", html.Sub("N,threshold"), ")"
+            ], style={'fontSize': '16px', 'marginTop': '10px'}),
+            html.P([
+                "where L₀ = ligand concentration, R₀ = receptor count, ",
+                "C", html.Sub("N,threshold"), " = 1.0, k", html.Sub("on"), " = 10⁵ M⁻¹s⁻¹"
+            ], style={'fontSize': '12px', 'fontStyle': 'italic', 'marginTop': '10px'})
+        ])
+
+
+# =========================
+# Callback for plots
 # =========================
 
 @app.callback(
@@ -186,7 +256,7 @@ def update_plots(model, tau_range, N_range, N_ref, tau_ref, KD_threshold, L0, R0
         xaxis_title="Proofreading steps (N)",
         yaxis_title="Integration time (τ)",
         template="plotly_white",
-        height=1000,
+        height=600,
         xaxis=dict(showgrid=False),
         yaxis=dict(showgrid=False)
     )
@@ -212,29 +282,30 @@ def update_plots(model, tau_range, N_range, N_ref, tau_ref, KD_threshold, L0, R0
         xaxis_title="Proofreading steps (N)",
         yaxis_title="Integration time (τ)",
         template="plotly_white",
-        height=1000,
+        height=600,
         xaxis=dict(showgrid=False),
         yaxis=dict(showgrid=False)
     )
 
     # ---- Heatmap 3: Fold change from threshold ----
     fold_change = KD_equiv / KD_threshold
+    log_fold_change = np.log10(fold_change)
     
     fig3 = go.Figure(go.Heatmap(
         x=N_vals,
         y=tau_vals,
-        z=fold_change,
+        z=log_fold_change,
         colorscale='Cividis',
-        colorbar=dict(title='Fold change'),
-        zmin=np.nanmin(fold_change),
-        zmax=np.nanmax(fold_change)
+        colorbar=dict(title='log10(Fold change)'),
+        zmin=np.nanmin(log_fold_change),
+        zmax=np.nanmax(log_fold_change)
     ))
     fig3.update_layout(
         title=f"Fold expansion of antigen landscape (relative to {KD_threshold} µM)",
         xaxis_title="Proofreading steps (N)",
         yaxis_title="Integration time (τ)",
         template="plotly_white",
-        height=1000,
+        height=600,
         xaxis=dict(showgrid=False),
         yaxis=dict(showgrid=False)
     )
