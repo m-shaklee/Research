@@ -97,13 +97,14 @@ app.layout = html.Div([
     html.Label("τ range (integration time)"),
     dcc.RangeSlider(
         id='tau_range', min=0.5, max=10, step=0.25,
-        value=[1.0, 6.0]
+        value=[1.0, 6.0],
+        marks={i: str(i) for i in range(0, 11, 2)}
     ),
 
     html.Label("N range (proofreading depth)"),
     dcc.RangeSlider(
         id='N_range', min=1, max=8, step=1,
-        value=[1, 6],
+        value=[2, 6],
         marks={i: str(i) for i in range(1, 9)}
     ),
 
