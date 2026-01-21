@@ -142,9 +142,9 @@ app.layout = html.Div([
 
     html.Br(),
 
-    dcc.Graph(id='KD-heatmap', style={'height': '600px'}),
-    dcc.Graph(id='KD-difference', style={'height': '600px'}),
-    dcc.Graph(id='KD-range-size', style={'height': '600px'})
+    dcc.Graph(id='KD-heatmap', style={'height': '1000px'}),
+    dcc.Graph(id='KD-difference', style={'height': '1000px'}),
+    dcc.Graph(id='KD-range-size', style={'height': '1000px'})
 ])
 
 # =========================
@@ -256,7 +256,7 @@ def update_plots(model, tau_range, N_range, N_ref, tau_ref, KD_threshold, L0, R0
         xaxis_title="Proofreading steps (N)",
         yaxis_title="Integration time (τ)",
         template="plotly_white",
-        height=600,
+        height=1000,
         xaxis=dict(showgrid=False),
         yaxis=dict(showgrid=False)
     )
@@ -282,7 +282,7 @@ def update_plots(model, tau_range, N_range, N_ref, tau_ref, KD_threshold, L0, R0
         xaxis_title="Proofreading steps (N)",
         yaxis_title="Integration time (τ)",
         template="plotly_white",
-        height=600,
+        height=1000,
         xaxis=dict(showgrid=False),
         yaxis=dict(showgrid=False)
     )
@@ -305,7 +305,7 @@ def update_plots(model, tau_range, N_range, N_ref, tau_ref, KD_threshold, L0, R0
         xaxis_title="Proofreading steps (N)",
         yaxis_title="Integration time (τ)",
         template="plotly_white",
-        height=600,
+        height=1000,
         xaxis=dict(showgrid=False),
         yaxis=dict(showgrid=False)
     )
