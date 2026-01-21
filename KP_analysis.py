@@ -81,6 +81,13 @@ app.layout = html.Div([
         marks={i: str(i) for i in range(1, 9)}
     ),
 
+    html.Label("Activation threshold KD (µM)"),
+    dcc.Slider(
+        id='KD_threshold',
+        min=1, max=300, step=1, value=100,
+        marks={1: '1', 50: '50', 100: '100', 300: '300'}
+    ),
+
     html.Label("Ligand concentration L₀ (concentration KP only)"),
     dcc.Slider(id='L0', min=1, max=200, step=5, value=50),
 
@@ -99,40 +106,34 @@ app.layout = html.Div([
 
 @app.callback(
     Output('KD-heatmap', 'figure'),
-    Output('KD-difference', 'figure'),
+    Output('KD-activation', 'figure'),
     Input('kp_model', 'value'),
     Input('tau_range', 'value'),
     Input('N_range', 'value'),
+    Input('KD_threshold', 'value'),
     Input('L0', 'value'),
     Input('R0', 'value')
 )
-def update_plots(model, tau_range, N_range, L0, R0):
+def update_plots(model, tau_range, N_range, KD_threshold, L0, R0):
 
     tau_vals = np.linspace(tau_range[0], tau_range[1], 80)
     N_vals = np.arange(N_range[0], N_range[1] + 1)
 
     KD_max = np.zeros((len(tau_vals), len(N_vals)))
-    KD_baseline = np.zeros_like(KD_max)
 
     for i, tau in enumerate(tau_vals):
         for j, N in enumerate(N_vals):
 
             if model == 'simple':
                 KD_max[i, j] = KD_threshold_simple(N, tau)
-                KD_baseline[i, j] = KD_threshold_simple(N, tau_range[0])
 
             else:
                 KD_max[i, j] = KD_threshold_concentration(N, tau, L0, R0)
-                KD_baseline[i, j] = KD_threshold_concentration(
-                    N, tau_range[0], L0, R0
-                )
 
-    KD_gain = KD_max - KD_baseline
+    # === KD-based activation ===
+    activation_map = (KD_max >= KD_threshold).astype(int)
 
-    # =========================
-    # Heatmap: Antigenic reach
-    # =========================
-
+    # ---- Heatmap 1: Antigenic reach ----
     fig1 = go.Figure(
         data=go.Heatmap(
             x=N_vals,
@@ -144,29 +145,25 @@ def update_plots(model, tau_range, N_range, L0, R0):
     )
 
     fig1.update_layout(
-        title="Maximum activatable affinity (antigenic reach)",
+        title="Maximum activatable affinity (KDₘₐₓ)",
         xaxis_title="Proofreading steps (N)",
         yaxis_title="Integration time (τ)",
         template="plotly_white"
     )
 
-    # =========================
-    # Heatmap: Gain
-    # =========================
-
+    # ---- Heatmap 2: Activation region ----
     fig2 = go.Figure(
         data=go.Heatmap(
             x=N_vals,
             y=tau_vals,
-            z=KD_gain,
-            colorscale='RdBu',
-            colorbar=dict(title='ΔKD (µM)'),
-            zmid=0
+            z=activation_map,
+            colorscale=[[0, 'white'], [1, 'green']],
+            showscale=False
         )
     )
 
     fig2.update_layout(
-        title="Memory-induced expansion of antigenic space",
+        title=f"Activation region (KD ≥ {KD_threshold} µM)",
         xaxis_title="Proofreading steps (N)",
         yaxis_title="Integration time (τ)",
         template="plotly_white"
