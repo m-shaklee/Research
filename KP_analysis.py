@@ -47,6 +47,30 @@ def KD_bounds_concentration(N, tau, L0, R0, prob_thresh=0.5):
         return np.nan, np.nan
     return KD_vals[idx[0]], KD_vals[idx[-1]]
 
+def KD_bounds_simple_for_slider(N, tau, KD_slider):
+    """
+    Given a slider KD value (µM), find all KD values
+    that would have an activation probability >=
+    P(KD_slider)
+    """
+    KD_vals = np.logspace(-2, 3, 1000)  # 0.01 - 1000 µM
+    # Activation probability at the slider KD
+    P_thresh = activation_probability_simple(KD_slider, N, tau)
+    P = activation_probability_simple(KD_vals, N, tau)
+    idx = np.where(P >= P_thresh)[0]
+    if len(idx) == 0:
+        return np.nan, np.nan
+    return KD_vals[idx[0]], KD_vals[idx[-1]]
+
+def KD_bounds_concentration_for_slider(N, tau, L0, R0, KD_slider):
+    KD_vals = np.logspace(-2, 3, 1000)
+    P_thresh = activation_probability_concentration(KD_slider, N, tau, L0, R0)
+    P = activation_probability_concentration(KD_vals, N, tau, L0, R0)
+    idx = np.where(P >= P_thresh)[0]
+    if len(idx) == 0:
+        return np.nan, np.nan
+    return KD_vals[idx[0]], KD_vals[idx[-1]]
+
 # =========================
 # KD threshold finders
 # =========================
@@ -151,11 +175,11 @@ def KD_bounds_concentration(N, tau, L0, R0, prob_thresh=0.5):
     Input('kp_model', 'value'),
     Input('tau_range', 'value'),
     Input('N_range', 'value'),
-    Input('KD_threshold', 'value'),
+    Input('KD_threshold', 'value'),  # slider in µM
     Input('L0', 'value'),
     Input('R0', 'value')
 )
-def update_plots(model, tau_range, N_range, KD_threshold, L0, R0):
+def update_plots(model, tau_range, N_range, KD_slider, L0, R0):
 
     tau_vals = np.linspace(tau_range[0], tau_range[1], 80)
     N_vals = np.arange(N_range[0], N_range[1] + 1)
@@ -163,18 +187,18 @@ def update_plots(model, tau_range, N_range, KD_threshold, L0, R0):
     KD_lower = np.zeros((len(tau_vals), len(N_vals)))
     KD_upper = np.zeros((len(tau_vals), len(N_vals)))
 
-    # Compute KD bounds
+    # Compute KD bounds dynamically based on slider
     for i, tau in enumerate(tau_vals):
         for j, N in enumerate(N_vals):
             if model == 'simple':
-                lower, upper = KD_bounds_simple(N, tau)
+                lower, upper = KD_bounds_simple_for_slider(N, tau, KD_slider)
             else:
-                lower, upper = KD_bounds_concentration(N, tau, L0, R0)
+                lower, upper = KD_bounds_concentration_for_slider(N, tau, L0, R0, KD_slider)
             KD_lower[i, j] = lower
             KD_upper[i, j] = upper
 
-    # Activation map: mark if the KD range includes the selected KD threshold
-    activation_map = ((KD_lower <= KD_threshold) & (KD_upper >= KD_threshold)).astype(int)
+    # Activation map: slider KD is within the KD bounds
+    activation_map = ((KD_lower <= KD_slider) & (KD_upper >= KD_slider)).astype(int)
 
     # ---- Heatmap 1: Maximum activatable KD ----
     fig1 = go.Figure(
@@ -183,10 +207,9 @@ def update_plots(model, tau_range, N_range, KD_threshold, L0, R0):
             y=tau_vals,
             z=np.log10(np.nan_to_num(KD_upper, nan=1e-6)),
             colorscale='Viridis',
-            colorbar=dict(title='log10(KD max µM)')
+            colorbar=dict(title='log10(KD upper µM)')
         )
     )
-
     fig1.update_layout(
         title="Maximum activatable KD (upper bound)",
         xaxis_title="Proofreading steps (N)",
@@ -195,13 +218,12 @@ def update_plots(model, tau_range, N_range, KD_threshold, L0, R0):
     )
 
     # ---- Heatmap 2: Activation region & new activations ----
-    # Shades of red for KD_upper above negative selection cutoff
     neg_cutoff = 170  # µM
     new_activation_map = np.zeros_like(KD_upper)
     new_activation_map[np.where(KD_upper >= neg_cutoff)] = KD_upper[np.where(KD_upper >= neg_cutoff)]
 
     fig2 = go.Figure()
-    # Base activation region
+    # Base activation region (green)
     fig2.add_trace(go.Heatmap(
         x=N_vals,
         y=tau_vals,
@@ -210,19 +232,19 @@ def update_plots(model, tau_range, N_range, KD_threshold, L0, R0):
         showscale=False,
         name='Activated'
     ))
-    # Overlay new activations in shades of red
+    # Overlay new activations (red)
     fig2.add_trace(go.Heatmap(
         x=N_vals,
         y=tau_vals,
         z=new_activation_map,
         colorscale='Reds',
-        colorbar=dict(title='KD above 170 µM'),
+        colorbar=dict(title='KD > 170 µM'),
         zmin=neg_cutoff,
         zmax=np.nanmax(KD_upper)
     ))
 
     fig2.update_layout(
-        title=f"Activation region (KD ≥ {KD_threshold} µM) & new activations (> {neg_cutoff} µM)",
+        title=f"Activation region (KD ≥ {KD_slider} µM) & new activations (> {neg_cutoff} µM)",
         xaxis_title="Proofreading steps (N)",
         yaxis_title="Integration time (τ)",
         template="plotly_white"
