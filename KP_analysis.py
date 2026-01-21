@@ -187,7 +187,7 @@ def update_plots(model, tau_range, N_range, KD_slider, L0, R0):
     KD_lower = np.zeros((len(tau_vals), len(N_vals)))
     KD_upper = np.zeros((len(tau_vals), len(N_vals)))
 
-    # Compute KD bounds dynamically based on slider
+    # Compute KD bounds dynamically based on slider KD
     for i, tau in enumerate(tau_vals):
         for j, N in enumerate(N_vals):
             if model == 'simple':
@@ -197,17 +197,23 @@ def update_plots(model, tau_range, N_range, KD_slider, L0, R0):
             KD_lower[i, j] = lower
             KD_upper[i, j] = upper
 
-    # Activation map: slider KD is within the KD bounds
-    activation_map = ((KD_lower <= KD_slider) & (KD_upper >= KD_slider)).astype(int)
+    # Compute activation range size
+    KD_range_size = KD_upper - KD_lower
+
+    # Log-scale for KD
+    log_KD_upper = np.log10(np.nan_to_num(KD_upper, nan=1e-6))
+    log_KD_range = np.log10(np.nan_to_num(KD_range_size, nan=1e-6))
 
     # ---- Heatmap 1: Maximum activatable KD ----
     fig1 = go.Figure(
         data=go.Heatmap(
             x=N_vals,
             y=tau_vals,
-            z=np.log10(np.nan_to_num(KD_upper, nan=1e-6)),
+            z=log_KD_upper,
             colorscale='Viridis',
-            colorbar=dict(title='log10(KD upper µM)')
+            colorbar=dict(title='log10(KD upper µM)'),
+            zmin=np.nanmin(log_KD_upper),
+            zmax=np.nanmax(log_KD_upper)
         )
     )
     fig1.update_layout(
@@ -217,32 +223,31 @@ def update_plots(model, tau_range, N_range, KD_slider, L0, R0):
         template="plotly_white"
     )
 
-    # ---- Heatmap 2: Activation region & new activations ----
+    # ---- Heatmap 2: New activations above negative selection cutoff ----
     neg_cutoff = 170  # µM
-    new_activation_map = np.zeros_like(KD_upper)
-    new_activation_map[np.where(KD_upper >= neg_cutoff)] = KD_upper[np.where(KD_upper >= neg_cutoff)]
-
     fig2 = go.Figure()
-    # Base activation region (green)
+
+    # Green = KD_upper below negative selection
+    green_mask = log_KD_upper < np.log10(neg_cutoff)
     fig2.add_trace(go.Heatmap(
         x=N_vals,
         y=tau_vals,
-        z = np.log10(KD_upper),
-        # z=activation_map,
+        z=green_mask.astype(float),
         colorscale=[[0, 'white'], [1, 'green']],
         showscale=False,
         name='Activated'
     ))
-    # Overlay new activations (red)
+
+    # Red = KD_upper above negative selection cutoff
+    red_mask = log_KD_upper >= np.log10(neg_cutoff)
     fig2.add_trace(go.Heatmap(
         x=N_vals,
         y=tau_vals,
-        z = np.log10(KD_upper),
-        # z=new_activation_map,
+        z=np.where(red_mask, log_KD_upper, np.nan),
         colorscale='Reds',
-        colorbar=dict(title='KD > 170 µM'),
-        zmin=neg_cutoff,
-        zmax=np.nanmax(KD_upper)
+        colorbar=dict(title='log10(KD µM)'),
+        zmin=np.log10(neg_cutoff),
+        zmax=np.nanmax(log_KD_upper)
     ))
 
     fig2.update_layout(
@@ -252,6 +257,26 @@ def update_plots(model, tau_range, N_range, KD_slider, L0, R0):
         template="plotly_white"
     )
 
+    # ---- Optional Heatmap 3: Size of activation range ----
+    fig3 = go.Figure(
+        data=go.Heatmap(
+            x=N_vals,
+            y=tau_vals,
+            z=KD_range_size,
+            colorscale='Cividis',
+            colorbar=dict(title='KD_upper - KD_lower (µM)'),
+            zmin=np.nanmin(KD_range_size),
+            zmax=np.nanmax(KD_range_size)
+        )
+    )
+    fig3.update_layout(
+        title="Size of activation range (KD_upper - KD_lower)",
+        xaxis_title="Proofreading steps (N)",
+        yaxis_title="Integration time (τ)",
+        template="plotly_white"
+    )
+
+    # Return first two heatmaps for the app (you can add fig3 if you add a third Graph component)
     return fig1, fig2
 
 
