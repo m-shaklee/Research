@@ -60,6 +60,7 @@ def find_equivalent_KD(KD_threshold, N_new, tau_new, N_old, tau_old, model='simp
     idx = np.argmin(np.abs(P_search - P_target))
     return KD_search[idx]
 
+
 # =========================
 # Dash app
 # =========================
@@ -130,14 +131,15 @@ app.layout = html.Div([
 
     html.Br(),
 
-    dcc.Graph(id='KD-heatmap', style={'height': '500px'}),
-    dcc.Graph(id='KD-difference', style={'height': '500px'}),
-    dcc.Graph(id='KD-range-size', style={'height': '500px'})
+    dcc.Graph(id='KD-heatmap', style={'height': '600px'}),
+    dcc.Graph(id='KD-difference', style={'height': '600px'}),
+    dcc.Graph(id='KD-range-size', style={'height': '600px'})
 ])
 
 # =========================
 # Callback
 # =========================
+
 @app.callback(
     Output('KD-heatmap', 'figure'),
     Output('KD-difference', 'figure'),
@@ -183,7 +185,10 @@ def update_plots(model, tau_range, N_range, N_ref, tau_ref, KD_threshold, L0, R0
         title=f"Equivalent KD with same activation as {KD_threshold} µM (N={N_ref}, τ={tau_ref})",
         xaxis_title="Proofreading steps (N)",
         yaxis_title="Integration time (τ)",
-        template="plotly_white"
+        template="plotly_white",
+        height=600,
+        xaxis=dict(showgrid=False),
+        yaxis=dict(showgrid=False)
     )
 
     # ---- Heatmap 2: New activations above negative selection threshold ----
@@ -206,7 +211,10 @@ def update_plots(model, tau_range, N_range, N_ref, tau_ref, KD_threshold, L0, R0
         title=f"New activations above negative selection ({neg_cutoff} µM)",
         xaxis_title="Proofreading steps (N)",
         yaxis_title="Integration time (τ)",
-        template="plotly_white"
+        template="plotly_white",
+        height=600,
+        xaxis=dict(showgrid=False),
+        yaxis=dict(showgrid=False)
     )
 
     # ---- Heatmap 3: Fold change from threshold ----
@@ -225,7 +233,10 @@ def update_plots(model, tau_range, N_range, N_ref, tau_ref, KD_threshold, L0, R0
         title=f"Fold expansion of antigen landscape (relative to {KD_threshold} µM)",
         xaxis_title="Proofreading steps (N)",
         yaxis_title="Integration time (τ)",
-        template="plotly_white"
+        template="plotly_white",
+        height=600,
+        xaxis=dict(showgrid=False),
+        yaxis=dict(showgrid=False)
     )
 
     return fig1, fig2, fig3
