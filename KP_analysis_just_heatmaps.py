@@ -142,25 +142,9 @@ app.layout = html.Div([
 
     html.Br(),
 
-    html.Div([
-        html.H4("Single-Cell Activation Probability"),
-        dcc.Graph(id='activation-curve', style={'height': '600px'})
-    ]),
-
-    html.Div([
-        html.H4("Quantitative Summary"),
-        html.Div(id='quantitative-summary', style={
-            'padding': '15px',
-            'backgroundColor': '#e8f4f8',
-            'borderRadius': '5px',
-            'marginTop': '10px',
-            'marginBottom': '20px'
-        })
-    ]),
-
-    dcc.Graph(id='KD-heatmap', style={'height': '600px'}),
-    dcc.Graph(id='KD-difference', style={'height': '600px'}),
-    dcc.Graph(id='KD-range-size', style={'height': '600px'})
+    dcc.Graph(id='KD-heatmap', style={'height': '1000px'}),
+    dcc.Graph(id='KD-difference', style={'height': '1000px'}),
+    dcc.Graph(id='KD-range-size', style={'height': '1000px'})
 ])
 
 # =========================
@@ -227,8 +211,6 @@ def update_equations(model):
 # =========================
 
 @app.callback(
-    Output('activation-curve', 'figure'),
-    Output('quantitative-summary', 'children'),
     Output('KD-heatmap', 'figure'),
     Output('KD-difference', 'figure'),
     Output('KD-range-size', 'figure'),
@@ -242,155 +224,6 @@ def update_equations(model):
     Input('R0', 'value')
 )
 def update_plots(model, tau_range, N_range, N_ref, tau_ref, KD_threshold, L0, R0):
-
-    # ============================================
-    # PART 1: ACTIVATION PROBABILITY VS AFFINITY
-    # ============================================
-    
-    KD_range = np.logspace(-2, 3, 200)  # 0.01 to 1000 µM
-    
-    # Reference (naive) parameters
-    if model == 'simple':
-        P_ref = activation_probability_simple(KD_range, N_ref, tau_ref)
-    else:
-        P_ref = activation_probability_concentration(KD_range, N_ref, tau_ref, L0, R0)
-    
-    # Example memory parameters (increased N and tau)
-    N_mem = min(N_range[1], N_ref + 2)  # Add 2 steps
-    tau_mem = min(tau_range[1], tau_ref * 2)  # Double integration time
-    
-    if model == 'simple':
-        P_mem = activation_probability_simple(KD_range, N_mem, tau_mem)
-    else:
-        P_mem = activation_probability_concentration(KD_range, N_mem, tau_mem, L0, R0)
-    
-    # Create activation probability plot
-    fig_activation = go.Figure()
-    
-    fig_activation.add_trace(go.Scatter(
-        x=KD_range,
-        y=P_ref,
-        mode='lines',
-        name=f'Reference (N={N_ref}, τ={tau_ref})',
-        line=dict(width=3, color='blue')
-    ))
-    
-    fig_activation.add_trace(go.Scatter(
-        x=KD_range,
-        y=P_mem,
-        mode='lines',
-        name=f'Memory-like (N={N_mem}, τ={tau_mem})',
-        line=dict(width=3, color='red')
-    ))
-    
-    # Add threshold line
-    fig_activation.add_hline(
-        y=0.5, 
-        line_dash="dash", 
-        line_color="gray",
-        annotation_text="50% activation threshold"
-    )
-    
-    # Add negative selection threshold
-    fig_activation.add_vline(
-        x=170,
-        line_dash="dot",
-        line_color="orange",
-        annotation_text="Negative selection (~170 µM)"
-    )
-    
-    fig_activation.update_layout(
-        title="Activation Probability vs Antigen Affinity",
-        xaxis_title="K<sub>D</sub> (µM)",
-        yaxis_title="P(activation)",
-        xaxis_type="log",
-        template="plotly_white",
-        height=600,
-        xaxis=dict(showgrid=True, gridcolor='lightgray'),
-        yaxis=dict(showgrid=True, gridcolor='lightgray'),
-        legend=dict(x=0.6, y=0.95)
-    )
-    
-    # ============================================
-    # PART 2: QUANTITATIVE SUMMARY
-    # ============================================
-    
-    # Find KD values at 50% activation
-    idx_ref = np.argmin(np.abs(P_ref - 0.5))
-    KD_50_ref = KD_range[idx_ref]
-    
-    idx_mem = np.argmin(np.abs(P_mem - 0.5))
-    KD_50_mem = KD_range[idx_mem]
-    
-    fold_change_50 = KD_50_mem / KD_50_ref
-    
-    # Find KD values at 10% activation (more sensitive threshold)
-    idx_ref_10 = np.argmin(np.abs(P_ref - 0.1))
-    KD_10_ref = KD_range[idx_ref_10]
-    
-    idx_mem_10 = np.argmin(np.abs(P_mem - 0.1))
-    KD_10_mem = KD_range[idx_mem_10]
-    
-    fold_change_10 = KD_10_mem / KD_10_ref
-    
-    # Check if negative selection threshold is crossed
-    P_ref_170 = P_ref[np.argmin(np.abs(KD_range - 170))]
-    P_mem_170 = P_mem[np.argmin(np.abs(KD_range - 170))]
-    
-    # Parameter changes
-    delta_N = N_mem - N_ref
-    delta_tau = tau_mem - tau_ref
-    fold_tau = tau_mem / tau_ref
-    
-    summary = html.Div([
-        html.H5("Quantitative Predictions:", style={'marginBottom': '10px'}),
-        
-        html.P([
-            html.Strong("Parameter changes: "),
-            f"ΔN = +{delta_N} steps, Δτ = +{delta_tau:.2f} s ({fold_tau:.1f}×)"
-        ]),
-        
-        html.P([
-            html.Strong("Affinity expansion at 50% activation: "),
-            f"K_D shifts from {KD_50_ref:.1f} µM → {KD_50_mem:.1f} µM ",
-            html.Span(f"({fold_change_50:.1f}× increase)", 
-                     style={'color': 'red', 'fontWeight': 'bold'})
-        ]),
-        
-        html.P([
-            html.Strong("Affinity expansion at 10% activation: "),
-            f"K_D shifts from {KD_10_ref:.1f} µM → {KD_10_mem:.1f} µM ",
-            html.Span(f"({fold_change_10:.1f}× increase)", 
-                     style={'color': 'red', 'fontWeight': 'bold'})
-        ]),
-        
-        html.P([
-            html.Strong("Negative selection (170 µM): "),
-            f"P(activation) = {P_ref_170:.1%} (ref) → {P_mem_170:.1%} (memory)",
-            html.Br(),
-            html.Span(
-                "⚠️ Memory parameters enable response to neg. selected antigens!" 
-                if P_mem_170 > 0.1 and P_ref_170 < 0.1 
-                else "✓ Both below activation threshold" 
-                if P_mem_170 < 0.1 
-                else "Note: Check if this crosses your activation threshold",
-                style={'fontStyle': 'italic', 
-                       'color': 'red' if (P_mem_170 > 0.1 and P_ref_170 < 0.1) else 'green'}
-            )
-        ]),
-        
-        html.Hr(),
-        
-        html.P([
-            html.Strong("Key insight: "),
-            f"A {fold_tau:.1f}× increase in integration time with {delta_N} additional steps ",
-            f"yields ~{fold_change_50:.0f}× expansion in affinity range."
-        ], style={'fontSize': '14px', 'backgroundColor': '#fff3cd', 'padding': '10px', 'borderRadius': '5px'})
-    ])
-
-    # ============================================
-    # PART 3: HEATMAPS (existing code)
-    # ============================================
 
     tau_vals = np.linspace(tau_range[0], tau_range[1], 80)
     N_vals = np.arange(N_range[0], N_range[1] + 1)
@@ -423,7 +256,7 @@ def update_plots(model, tau_range, N_range, N_ref, tau_ref, KD_threshold, L0, R0
         xaxis_title="Proofreading steps (N)",
         yaxis_title="Integration time (τ)",
         template="plotly_white",
-        height=600,
+        height=1000,
         xaxis=dict(showgrid=False),
         yaxis=dict(showgrid=False)
     )
@@ -449,7 +282,7 @@ def update_plots(model, tau_range, N_range, N_ref, tau_ref, KD_threshold, L0, R0
         xaxis_title="Proofreading steps (N)",
         yaxis_title="Integration time (τ)",
         template="plotly_white",
-        height=600,
+        height=1000,
         xaxis=dict(showgrid=False),
         yaxis=dict(showgrid=False)
     )
@@ -472,7 +305,7 @@ def update_plots(model, tau_range, N_range, N_ref, tau_ref, KD_threshold, L0, R0
         xaxis_title="Proofreading steps (N)",
         yaxis_title="Integration time (τ)",
         template="plotly_white",
-        height=600,
+        height=1000,
         xaxis=dict(showgrid=False),
         yaxis=dict(showgrid=False)
     )
