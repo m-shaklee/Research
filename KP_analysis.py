@@ -106,7 +106,7 @@ app.layout = html.Div([
 
 @app.callback(
     Output('KD-heatmap', 'figure'),
-    Output('KD-activation', 'figure'),
+    Output('KD-difference', 'figure'),
     Input('kp_model', 'value'),
     Input('tau_range', 'value'),
     Input('N_range', 'value'),
@@ -138,7 +138,7 @@ def update_plots(model, tau_range, N_range, KD_threshold, L0, R0):
         data=go.Heatmap(
             x=N_vals,
             y=tau_vals,
-            z=np.log10(KD_max),
+            z=np.log10(np.nan_to_num(KD_max, nan=1e-6)),
             colorscale='Viridis',
             colorbar=dict(title='log10(KD max µM)')
         )
