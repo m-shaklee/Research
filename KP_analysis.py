@@ -227,7 +227,8 @@ def update_plots(model, tau_range, N_range, KD_slider, L0, R0):
     fig2.add_trace(go.Heatmap(
         x=N_vals,
         y=tau_vals,
-        z=activation_map,
+        z = np.log10(KD_upper),
+        # z=activation_map,
         colorscale=[[0, 'white'], [1, 'green']],
         showscale=False,
         name='Activated'
@@ -236,7 +237,8 @@ def update_plots(model, tau_range, N_range, KD_slider, L0, R0):
     fig2.add_trace(go.Heatmap(
         x=N_vals,
         y=tau_vals,
-        z=new_activation_map,
+        z = np.log10(KD_upper),
+        # z=new_activation_map,
         colorscale='Reds',
         colorbar=dict(title='KD > 170 µM'),
         zmin=neg_cutoff,
