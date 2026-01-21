@@ -131,9 +131,9 @@ app.layout = html.Div([
 
     html.Br(),
 
-    dcc.Graph(id='KD-heatmap', style={'height': '600px'}),
-    dcc.Graph(id='KD-difference', style={'height': '600px'}),
-    dcc.Graph(id='KD-range-size', style={'height': '600px'})
+    dcc.Graph(id='KD-heatmap', style={'height': '1000px'}),
+    dcc.Graph(id='KD-difference', style={'height': '1000px'}),
+    dcc.Graph(id='KD-range-size', style={'height': '1000px'})
 ])
 
 # =========================
