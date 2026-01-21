@@ -258,17 +258,27 @@ def update_plots(model, tau_range, N_range, KD_slider, L0, R0):
     )
 
     # ---- Optional Heatmap 3: Size of activation range ----
-    fig3 = go.Figure(
-        data=go.Heatmap(
-            x=N_vals,
-            y=tau_vals,
-            z=KD_range_size,
-            colorscale='Cividis',
-            colorbar=dict(title='KD_upper - KD_lower (µM)'),
-            zmin=np.nanmin(KD_range_size),
-            zmax=np.nanmax(KD_range_size)
-        )
-    )
+    fig3 = go.Figure()
+    fig2.add_trace(go.Heatmap(
+        x=N_vals,
+        y=tau_vals,
+        z=KD_range_size,
+        colorscale='Cividis',
+        colorbar=dict(title='KD_upper - KD_lower (µM)'),
+        zmin=np.nanmin(KD_range_size),
+        zmax=np.nanmax(KD_range_size)
+    ))
+    # fig3 = go.Figure(
+    #     data=go.Heatmap(
+    #         x=N_vals,
+    #         y=tau_vals,
+    #         z=KD_range_size,
+    #         colorscale='Cividis',
+    #         colorbar=dict(title='KD_upper - KD_lower (µM)'),
+    #         zmin=np.nanmin(KD_range_size),
+    #         zmax=np.nanmax(KD_range_size)
+    #     )
+    # )
     fig3.update_layout(
         title="Size of activation range (KD_upper - KD_lower)",
         xaxis_title="Proofreading steps (N)",
