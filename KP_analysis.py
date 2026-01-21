@@ -2,57 +2,59 @@ import dash
 from dash import dcc, html
 from dash.dependencies import Input, Output
 import plotly.graph_objs as go
-import os
 import numpy as np
+import os
 
+# =========================
+# Models
+# =========================
 
-def activation_probability_simple_model(KD_uM, N, tau_total, kon=1e5):
-    """
-    Simplified KP: returns activation probability directly.
-    """
+def activation_probability_simple(KD_uM, N, tau_total, kon=1e5):
     KD_M = KD_uM * 1e-6
     koff = KD_M * kon
     tau_b = 1.0 / koff
     tau_step = tau_total / N
-    P = (tau_b / (tau_b + tau_step)) ** N
-    return np.clip(P, 0.0, 1.0)
+    return np.clip((tau_b / (tau_b + tau_step)) ** N, 0, 1)
 
-def activation_probability_concentration_model(
+def activation_probability_concentration(
     KD_uM, N, tau_total, L0, R0, threshold_CN=1.0, kon=1e5
 ):
-    """
-    Concentration-aware KP:
-    τ controls kp, which controls proofreading speed.
-    """
-    kp = 1.0 / tau_total  # explicit τ → kp mapping
-
+    kp = 1.0 / tau_total
     KD_M = KD_uM * 1e-6
     koff = KD_M * kon
 
     term = L0 + R0 + koff / kon
     disc = np.maximum(term**2 - 4 * L0 * R0, 0)
     C_tot = (term - np.sqrt(disc)) / 2
-
     C_N = C_tot * (1 + koff / kp) ** (-N)
 
-    # Convert molecular signal → probability
-    P = 1 - np.exp(-C_N / threshold_CN)
-    return np.clip(P, 0.0, 1.0)
+    return np.clip(1 - np.exp(-C_N / threshold_CN), 0, 1)
 
-# def find_responsive_affinities(KD_start, L0, R0, N, kp, memory_gain, threshold=0.5):
-#     """Return ligand affinities (uM) that result in activation probability >= threshold"""
-#     kp_eff = kp * memory_gain
-#     KD_range = np.logspace(-2, 3, 500)  # from 0.01 uM to 1000 uM
-#     C_N_vals = kp_activation_probability_concentration(KD_range, L0, R0, N, kp_eff)
-#     P_vals = activation_probability_from_CN(C_N_vals)
-    
-#     responsive_KD = KD_range[P_vals >= threshold]
-#     return responsive_KD, P_vals, KD_range
+# =========================
+# KD threshold finders
+# =========================
+
+def KD_threshold_simple(N, tau, prob_thresh=0.5):
+    KD_vals = np.logspace(-2, 3, 1000)
+    P = activation_probability_simple(KD_vals, N, tau)
+    idx = np.where(P >= prob_thresh)[0]
+    return KD_vals[idx[0]] if len(idx) > 0 else np.nan
+
+def KD_threshold_concentration(N, tau, L0, R0, prob_thresh=0.5):
+    KD_vals = np.logspace(-2, 3, 1000)
+    P = activation_probability_concentration(KD_vals, N, tau, L0, R0)
+    idx = np.where(P >= prob_thresh)[0]
+    return KD_vals[idx[0]] if len(idx) > 0 else np.nan
+
+# =========================
+# Dash app
+# =========================
 
 app = dash.Dash(__name__)
 
 app.layout = html.Div([
-    html.H2("Memory-dependent activation phase diagram"),
+
+    html.H2("Kinetic Proofreading: Antigenic Reach & Memory Gain"),
 
     dcc.RadioItems(
         id='kp_model',
@@ -64,89 +66,117 @@ app.layout = html.Div([
         inline=True
     ),
 
-    html.Label("Test ligand affinity KD (µM)"),
-    dcc.Slider(id='KD_test', min=1, max=300, step=1, value=100),
+    html.Br(),
 
-    html.Label("Activation threshold"),
-    dcc.Slider(id='activation_threshold', min=0.1, max=0.9, step=0.05, value=0.5),
-
-    html.Label("τ range (total integration time)"),
+    html.Label("τ range (integration time)"),
     dcc.RangeSlider(
-        id='tau_range',
-        min=0.5, max=10, step=0.25,
+        id='tau_range', min=0.5, max=10, step=0.25,
         value=[1.0, 6.0]
     ),
 
-    html.Label("N range (proofreading steps)"),
+    html.Label("N range (proofreading depth)"),
     dcc.RangeSlider(
-        id='N_range',
-        min=1, max=8, step=1,
+        id='N_range', min=1, max=8, step=1,
         value=[1, 6],
         marks={i: str(i) for i in range(1, 9)}
     ),
 
-    html.Label("Ligand concentration L₀ (for concentration KP)"),
+    html.Label("Ligand concentration L₀ (concentration KP only)"),
     dcc.Slider(id='L0', min=1, max=200, step=5, value=50),
 
     html.Label("Receptor count R₀"),
     dcc.Slider(id='R0', min=1, max=200, step=5, value=50),
 
-    dcc.Graph(id='phase-diagram', style={'height': '700px'})
+    html.Br(),
+
+    dcc.Graph(id='KD-heatmap', style={'height': '500px'}),
+    dcc.Graph(id='KD-difference', style={'height': '500px'})
 ])
 
+# =========================
+# Callback
+# =========================
 
 @app.callback(
-    Output('phase-diagram', 'figure'),
+    Output('KD-heatmap', 'figure'),
+    Output('KD-difference', 'figure'),
     Input('kp_model', 'value'),
-    Input('KD_test', 'value'),
-    Input('activation_threshold', 'value'),
     Input('tau_range', 'value'),
     Input('N_range', 'value'),
     Input('L0', 'value'),
-    Input('R0', 'value'),
+    Input('R0', 'value')
 )
-def update_phase_diagram(model, KD_test, threshold, tau_range, N_range, L0, R0):
+def update_plots(model, tau_range, N_range, L0, R0):
 
-    tau_vals = np.linspace(tau_range[0], tau_range[1], 100)
+    tau_vals = np.linspace(tau_range[0], tau_range[1], 80)
     N_vals = np.arange(N_range[0], N_range[1] + 1)
 
-    activation = np.zeros((len(tau_vals), len(N_vals)))
+    KD_max = np.zeros((len(tau_vals), len(N_vals)))
+    KD_baseline = np.zeros_like(KD_max)
 
     for i, tau in enumerate(tau_vals):
         for j, N in enumerate(N_vals):
 
             if model == 'simple':
-                P = activation_probability_simple_model(
-                    KD_test, N, tau
+                KD_max[i, j] = KD_threshold_simple(N, tau)
+                KD_baseline[i, j] = KD_threshold_simple(N, tau_range[0])
+
+            else:
+                KD_max[i, j] = KD_threshold_concentration(N, tau, L0, R0)
+                KD_baseline[i, j] = KD_threshold_concentration(
+                    N, tau_range[0], L0, R0
                 )
 
-            elif model == 'concentration':
-                P = activation_probability_concentration_model(
-                    KD_test, N, tau, L0, R0
-                )
+    KD_gain = KD_max - KD_baseline
 
-            activation[i, j] = P >= threshold
+    # =========================
+    # Heatmap: Antigenic reach
+    # =========================
 
-    fig = go.Figure(
+    fig1 = go.Figure(
         data=go.Heatmap(
             x=N_vals,
             y=tau_vals,
-            z=activation,
-            colorscale='Greens',
-            colorbar=dict(title='Activated'),
+            z=np.log10(KD_max),
+            colorscale='Viridis',
+            colorbar=dict(title='log10(KD max µM)')
         )
     )
 
-    fig.update_layout(
-        title=f"Activation phase diagram ({model} KP, KD = {KD_test} µM)",
+    fig1.update_layout(
+        title="Maximum activatable affinity (antigenic reach)",
         xaxis_title="Proofreading steps (N)",
         yaxis_title="Integration time (τ)",
         template="plotly_white"
     )
 
-    return fig
+    # =========================
+    # Heatmap: Gain
+    # =========================
 
+    fig2 = go.Figure(
+        data=go.Heatmap(
+            x=N_vals,
+            y=tau_vals,
+            z=KD_gain,
+            colorscale='RdBu',
+            colorbar=dict(title='ΔKD (µM)'),
+            zmid=0
+        )
+    )
 
+    fig2.update_layout(
+        title="Memory-induced expansion of antigenic space",
+        xaxis_title="Proofreading steps (N)",
+        yaxis_title="Integration time (τ)",
+        template="plotly_white"
+    )
+
+    return fig1, fig2
+
+# =========================
+# Run
+# =========================
 
 port = int(os.environ.get("PORT", 8080))
 if __name__ == "__main__":
