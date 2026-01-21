@@ -102,14 +102,14 @@ app.layout = html.Div([
     html.Label("Reference N (proofreading steps)"),
     dcc.Slider(
         id='N_ref',
-        min=1, max=8, step=1, value=2,
+        min=1, max=8, step=1, value=2.67,
         marks={i: str(i) for i in range(1, 9)}
     ),
     
     html.Label("Reference τ (integration time)"),
     dcc.Slider(
         id='tau_ref',
-        min=0.5, max=10, step=0.25, value=2.0,
+        min=0.5, max=10, step=0.25, value=2.8,
         marks={i: str(i) for i in range(0, 11, 2)}
     ),
 
