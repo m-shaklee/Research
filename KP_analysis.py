@@ -437,6 +437,7 @@ def update_all_plots(model, curve_mode, fixed_KD, tau_range, N_range, N_ref, tau
         # MODE 2: Vary concentration at fixed KD
         if model == 'concentration':
             L0_range = np.logspace(-1, 3, 200)  # 0.1 to 1000
+    
             
             P_ref = np.array([
                 activation_probability_concentration(fixed_KD, N_ref, tau_ref, l0, R0)
