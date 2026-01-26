@@ -10,11 +10,19 @@ import os
 # =========================
 
 def activation_probability_simple(KD_uM, N, tau_total, kon=1e5):
-    KD_M = KD_uM * 1e-6
+    """
+    Vectorized version accepting numpy arrays or scalars.
+    """
+    KD = np.asarray(KD_uM, dtype=float)
+    KD_M = KD * 1e-6
     koff = KD_M * kon
+    # avoid division by zero for KD==0 -> set extremely small
+    koff = np.where(koff == 0, 1e-300, koff)
     tau_b = 1.0 / koff
     tau_step = tau_total / N
-    return np.clip((tau_b / (tau_b + tau_step)) ** N, 0, 1)
+    p = (tau_b / (tau_b + tau_step)) ** N
+    p = np.clip(p, 0.0, 1.0)
+    return p
 
 def activation_probability_concentration(
     KD_uM, N, tau_total, L0, R0, threshold_CN=1.0, kon=1e5
@@ -69,7 +77,7 @@ app = dash.Dash(__name__)
 
 app.layout = html.Div([
 
-    html.H2("Kinetic Proofreading: Antigenic Reach & Memory Gain"),
+    html.H2("Kinetic Proofreading: Memory Cell Priming (Reduced KP Parameters)"),
     
     html.Div([
         html.H4("Model Equations"),
@@ -94,41 +102,41 @@ app.layout = html.Div([
 
     html.Br(),
 
-    html.Label("τ range (integration time)"),
+    html.Label("τ range (integration time) - Memory has LOWER τ"),
     dcc.RangeSlider(
         id='tau_range', min=0.5, max=10, step=0.25,
-        value=[1.0, 6.0],
+        value=[0.5, 2.0],
         marks={i: str(i) for i in range(0, 11, 2)}
     ),
 
-    html.Label("N range (proofreading depth)"),
+    html.Label("N range (proofreading depth) - Memory has LOWER N"),
     dcc.RangeSlider(
         id='N_range', min=1, max=8, step=1,
-        value=[2, 6],
+        value=[1, 2],
         marks={i: str(i) for i in range(1, 9)}
     ),
 
     html.Br(),
-    html.H4("Reference Parameters (Original State)"),
+    html.H4("Reference Parameters (Naive State - Higher KP)"),
     
-    html.Label("Reference N (proofreading steps)"),
+    html.Label("Reference N (proofreading steps) - Naive"),
     dcc.Slider(
         id='N_ref',
-        min=1, max=8, step=1, value=2,
+        min=1, max=8, step=1, value=4,
         marks={i: str(i) for i in range(1, 9)}
     ),
     
-    html.Label("Reference τ (integration time)"),
+    html.Label("Reference τ (integration time) - Naive"),
     dcc.Slider(
         id='tau_ref',
-        min=0.5, max=10, step=0.25, value=2.0,
+        min=0.5, max=10, step=0.25, value=4.0,
         marks={i: str(i) for i in range(0, 11, 2)}
     ),
 
-    html.Label("Activation threshold KD (µM)"),
+    html.Label("Activation threshold KD (µM) - for heatmaps"),
     dcc.Slider(
         id='KD_threshold',
-        min=1, max=300, step=1, value=100,
+        min=1, max=300, step=1, value=50,
         marks={1: '1', 50: '50', 100: '100', 300: '300'}
     ),
 
@@ -178,21 +186,37 @@ def update_equations(model):
             html.P([
                 html.Strong("Simplified Kinetic Proofreading Model"),
                 html.Br(),
-                "Assumes single ligand binding, no concentration dependence"
+                "Single ligand binding model, no concentration dependence"
             ]),
             html.P([
-                "τ", html.Sub("b"), " = 1/k", html.Sub("off"), " = 1/(K", html.Sub("D"), " × k", html.Sub("on"), ")"
+                html.Strong("Step 1: "), "Calculate k", html.Sub("off"), " from K", html.Sub("D")
             ], style={'marginTop': '10px'}),
             html.P([
-                "τ", html.Sub("step"), " = τ / N"
-            ]),
+                "k", html.Sub("off"), " = K", html.Sub("D"), " × k", html.Sub("on"),
+                html.Span(" (where k", style={'marginLeft': '10px'}), html.Sub("on"), " = 10⁵ M⁻¹s⁻¹)"
+            ], style={'marginLeft': '20px'}),
+            html.P([
+                html.Strong("Step 2: "), "Calculate bound time and step time"
+            ], style={'marginTop': '10px'}),
+            html.P([
+                "τ", html.Sub("b"), " = 1 / k", html.Sub("off"),
+                html.Span(" (time ligand stays bound)", style={'marginLeft': '10px', 'fontStyle': 'italic', 'fontSize': '12px'})
+            ], style={'marginLeft': '20px'}),
+            html.P([
+                "τ", html.Sub("step"), " = τ / N",
+                html.Span(" (time per proofreading step)", style={'marginLeft': '10px', 'fontStyle': 'italic', 'fontSize': '12px'})
+            ], style={'marginLeft': '20px'}),
+            html.P([
+                html.Strong("Step 3: "), "Calculate activation probability"
+            ], style={'marginTop': '10px'}),
             html.P([
                 html.Strong("P(activation) = "),
                 "(τ", html.Sub("b"), " / (τ", html.Sub("b"), " + τ", html.Sub("step"), "))", html.Sup("N")
-            ], style={'fontSize': '16px', 'marginTop': '10px'}),
+            ], style={'fontSize': '16px', 'marginTop': '5px', 'marginLeft': '20px', 'backgroundColor': '#ffffcc', 'padding': '5px'}),
             html.P([
-                "where k", html.Sub("on"), " = 10⁵ M⁻¹s⁻¹ (fixed)"
-            ], style={'fontSize': '12px', 'fontStyle': 'italic', 'marginTop': '10px'})
+                "Interpretation: Ligand must remain bound long enough (τ", html.Sub("b"), ") ",
+                "to complete all N proofreading steps (each taking τ", html.Sub("step"), ")"
+            ], style={'fontSize': '12px', 'fontStyle': 'italic', 'marginTop': '10px', 'color': '#555'})
         ])
     else:
         return html.Div([
@@ -240,72 +264,20 @@ def update_equations(model):
 def update_all_plots(model, tau_range, N_range, N_ref, tau_ref, KD_threshold, L0, R0):
     
     # ============================================
-    # EQUATIONS DISPLAY
-    # ============================================
-    if model == 'simple':
-        equations = html.Div([
-            html.P([
-                html.Strong("Simplified Kinetic Proofreading Model"),
-                html.Br(),
-                "Assumes single ligand binding, no concentration dependence"
-            ]),
-            html.P([
-                "τ", html.Sub("b"), " = 1/k", html.Sub("off"), " = 1/(K", html.Sub("D"), " × k", html.Sub("on"), ")"
-            ], style={'marginTop': '10px'}),
-            html.P([
-                "τ", html.Sub("step"), " = τ / N"
-            ]),
-            html.P([
-                html.Strong("P(activation) = "),
-                "(τ", html.Sub("b"), " / (τ", html.Sub("b"), " + τ", html.Sub("step"), "))", html.Sup("N")
-            ], style={'fontSize': '16px', 'marginTop': '10px'}),
-            html.P([
-                "where k", html.Sub("on"), " = 10⁵ M⁻¹s⁻¹ (fixed)"
-            ], style={'fontSize': '12px', 'fontStyle': 'italic', 'marginTop': '10px'})
-        ])
-    else:
-        equations = html.Div([
-            html.P([
-                html.Strong("Concentration-Dependent Kinetic Proofreading Model"),
-                html.Br(),
-                "From Pettmann et al. (2021) - Equations 2 & 3"
-            ]),
-            html.P([
-                "k", html.Sub("p"), " = 1/τ"
-            ], style={'marginTop': '10px'}),
-            html.P([
-                "C", html.Sub("tot"), " = [L₀ + R₀ + k", html.Sub("off"), "/k", html.Sub("on"), 
-                " - √((L₀ + R₀ + k", html.Sub("off"), "/k", html.Sub("on"), ")² - 4L₀R₀)] / 2"
-            ]),
-            html.P([
-                "C", html.Sub("N"), " = C", html.Sub("tot"), " × (1 + k", html.Sub("off"), 
-                "/k", html.Sub("p"), ")", html.Sup("-N")
-            ]),
-            html.P([
-                html.Strong("P(activation) = "),
-                "1 - exp(-C", html.Sub("N"), "/C", html.Sub("N,threshold"), ")"
-            ], style={'fontSize': '16px', 'marginTop': '10px'}),
-            html.P([
-                "where L₀ = ligand concentration, R₀ = receptor count, ",
-                "C", html.Sub("N,threshold"), " = 1.0, k", html.Sub("on"), " = 10⁵ M⁻¹s⁻¹"
-            ], style={'fontSize': '12px', 'fontStyle': 'italic', 'marginTop': '10px'})
-        ])
-
-    # ============================================
     # PART 1: ACTIVATION PROBABILITY VS AFFINITY
     # ============================================
     
-    KD_range = np.logspace(-2, 3, 200)  # 0.01 to 1000 µM
+    KD_range = np.logspace(-1, 3, 200)  # 0.1 to 1000 µM
     
-    # Reference (naive) parameters
+    # Reference (naive) parameters - HIGH KP (more selective)
     if model == 'simple':
         P_ref = activation_probability_simple(KD_range, N_ref, tau_ref)
     else:
         P_ref = activation_probability_concentration(KD_range, N_ref, tau_ref, L0, R0)
     
-    # Example memory parameters (increased N and tau)
-    N_mem = min(N_range[1], N_ref + 2)  # Add 2 steps
-    tau_mem = min(tau_range[1], tau_ref * 2)  # Double integration time
+    # Memory parameters - use the MIN from the ranges for primed/reduced KP
+    N_mem = N_range[0]  # MINIMUM N from range (less proofreading)
+    tau_mem = tau_range[0]  # MINIMUM tau from range (faster response)
     
     if model == 'simple':
         P_mem = activation_probability_simple(KD_range, N_mem, tau_mem)
@@ -319,7 +291,7 @@ def update_all_plots(model, tau_range, N_range, N_ref, tau_ref, KD_threshold, L0
         x=KD_range,
         y=P_ref,
         mode='lines',
-        name=f'Reference (N={N_ref}, τ={tau_ref})',
+        name=f'Naive (N={N_ref}, τ={tau_ref})',
         line=dict(width=3, color='blue')
     ))
     
@@ -327,7 +299,7 @@ def update_all_plots(model, tau_range, N_range, N_ref, tau_ref, KD_threshold, L0
         x=KD_range,
         y=P_mem,
         mode='lines',
-        name=f'Memory-like (N={N_mem}, τ={tau_mem})',
+        name=f'Memory - Primed (N={N_mem}, τ={tau_mem})',
         line=dict(width=3, color='red')
     ))
     
@@ -336,7 +308,7 @@ def update_all_plots(model, tau_range, N_range, N_ref, tau_ref, KD_threshold, L0
         y=0.5, 
         line_dash="dash", 
         line_color="gray",
-        annotation_text="50% activation threshold"
+        annotation_text="50% activation"
     )
     
     # Add negative selection threshold
@@ -344,24 +316,30 @@ def update_all_plots(model, tau_range, N_range, N_ref, tau_ref, KD_threshold, L0
         x=170,
         line_dash="dot",
         line_color="orange",
-        annotation_text="Negative selection (~170 µM)"
+        annotation_text="Neg. selection (170 µM)"
     )
     
     fig_activation.update_layout(
-        title="Activation Probability vs Antigen Affinity",
+        title="Activation Probability vs Antigen Affinity (Naive vs Memory - Reduced KP)",
         xaxis_title="K<sub>D</sub> (µM)",
         yaxis_title="P(activation)",
         xaxis_type="log",
+        xaxis_range=[-1, 3],
         template="plotly_white",
         height=600,
         xaxis=dict(showgrid=True, gridcolor='lightgray'),
         yaxis=dict(showgrid=True, gridcolor='lightgray'),
-        legend=dict(x=0.6, y=0.95)
+        legend=dict(x=0.02, y=0.98, bgcolor='rgba(255,255,255,0.8)')
     )
     
     # ============================================
     # PART 2: QUANTITATIVE SUMMARY
     # ============================================
+    
+    # Calculate activation probability AT THE THRESHOLD KD
+    idx_threshold = np.argmin(np.abs(KD_range - KD_threshold))
+    P_ref_threshold = P_ref[idx_threshold]
+    P_mem_threshold = P_mem[idx_threshold]
     
     # Find KD values at 50% activation
     idx_ref = np.argmin(np.abs(P_ref - 0.5))
@@ -372,7 +350,7 @@ def update_all_plots(model, tau_range, N_range, N_ref, tau_ref, KD_threshold, L0
     
     fold_change_50 = KD_50_mem / KD_50_ref
     
-    # Find KD values at 10% activation (more sensitive threshold)
+    # Find KD values at 10% activation
     idx_ref_10 = np.argmin(np.abs(P_ref - 0.1))
     KD_10_ref = KD_range[idx_ref_10]
     
@@ -385,36 +363,53 @@ def update_all_plots(model, tau_range, N_range, N_ref, tau_ref, KD_threshold, L0
     P_ref_170 = P_ref[np.argmin(np.abs(KD_range - 170))]
     P_mem_170 = P_mem[np.argmin(np.abs(KD_range - 170))]
     
-    # Parameter changes
-    delta_N = N_mem - N_ref
-    delta_tau = tau_mem - tau_ref
-    fold_tau = tau_mem / tau_ref
+    # Parameter changes (now showing REDUCTION)
+    delta_N = N_mem - N_ref  # Should be negative
+    delta_tau = tau_mem - tau_ref  # Should be negative
+    fold_tau = tau_mem / tau_ref  # Should be < 1
     
     summary = html.Div([
-        html.H5("Quantitative Predictions:", style={'marginBottom': '10px'}),
+        html.H5("Quantitative Predictions (Memory Cell Priming):", style={'marginBottom': '10px'}),
         
         html.P([
-            html.Strong("Parameter changes: "),
-            f"ΔN = +{delta_N} steps, Δτ = +{delta_tau:.2f} s ({fold_tau:.1f}×)"
+            html.Strong("Parameter changes (Memory is PRIMED - reduced KP): "),
+            f"ΔN = {delta_N} steps, Δτ = {delta_tau:.2f} s ({fold_tau:.2f}×)",
+            html.Br(),
+            html.Span("→ Memory cells have REDUCED proofreading = MORE permissive", 
+                     style={'color': 'green', 'fontWeight': 'bold', 'fontStyle': 'italic'})
         ]),
         
         html.P([
-            html.Strong("Affinity expansion at 50% activation: "),
-            f"K_D shifts from {KD_50_ref:.1f} µM → {KD_50_mem:.1f} µM ",
-            html.Span(f"({fold_change_50:.1f}× increase)", 
-                     style={'color': 'red', 'fontWeight': 'bold'})
+            html.Strong(f"Activation at threshold KD ({KD_threshold} µM): "),
+            f"P(activation) = {P_ref_threshold:.1%} (naive) → {P_mem_threshold:.1%} (memory)",
+            html.Br(),
+            html.Span(f"→ {P_mem_threshold/P_ref_threshold:.1f}× increase in activation probability" if P_ref_threshold > 0 else "→ Memory enables activation where naive cannot", 
+                     style={'color': 'green', 'fontWeight': 'bold'}),
+            html.Br(),
+            html.Span(
+                f"This means at KD={KD_threshold} µM, memory cells are {P_mem_threshold/P_ref_threshold:.1f}× more likely to activate" if P_ref_threshold > 0 else f"At KD={KD_threshold} µM, only memory cells can respond",
+                style={'fontStyle': 'italic', 'fontSize': '13px'})
         ]),
         
         html.P([
-            html.Strong("Affinity expansion at 10% activation: "),
-            f"K_D shifts from {KD_10_ref:.1f} µM → {KD_10_mem:.1f} µM ",
-            html.Span(f"({fold_change_10:.1f}× increase)", 
-                     style={'color': 'red', 'fontWeight': 'bold'})
+            html.Strong("Affinity range expansion (50% activation threshold): "),
+            f"K_D,50% = {KD_50_ref:.1f} µM (naive) → {KD_50_mem:.1f} µM (memory)",
+            html.Br(),
+            html.Span(f"→ {fold_change_50:.1f}× expansion in acceptable KD range", 
+                     style={'color': 'green' if fold_change_50 > 1 else 'red', 'fontWeight': 'bold'})
         ]),
         
         html.P([
-            html.Strong("Negative selection (170 µM): "),
-            f"P(activation) = {P_ref_170:.1%} (ref) → {P_mem_170:.1%} (memory)",
+            html.Strong("Affinity range expansion (10% activation threshold): "),
+            f"K_D,10% = {KD_10_ref:.1f} µM (naive) → {KD_10_mem:.1f} µM (memory)",
+            html.Br(),
+            html.Span(f"→ {fold_change_10:.1f}× expansion", 
+                     style={'color': 'green' if fold_change_10 > 1 else 'red', 'fontWeight': 'bold'})
+        ]),
+        
+        html.P([
+            html.Strong("Negative selection threshold (170 µM): "),
+            f"P(activation) = {P_ref_170:.1%} (naive) → {P_mem_170:.1%} (memory)",
             html.Br(),
             html.Span(
                 "⚠️ Memory parameters enable response to neg. selected antigens!" 
@@ -431,13 +426,14 @@ def update_all_plots(model, tau_range, N_range, N_ref, tau_ref, KD_threshold, L0
         
         html.P([
             html.Strong("Key insight: "),
-            f"A {fold_tau:.1f}× increase in integration time with {delta_N} additional steps ",
-            f"yields ~{fold_change_50:.0f}× expansion in affinity range."
-        ], style={'fontSize': '14px', 'backgroundColor': '#fff3cd', 'padding': '10px', 'borderRadius': '5px'})
+            f"At the threshold antigen (KD={KD_threshold} µM), memory cells show {P_mem_threshold:.1%} activation vs {P_ref_threshold:.1%} for naive cells. ",
+            f"Reducing N by {abs(delta_N)} steps and τ by {(1-fold_tau)*100:.0f}% ",
+            f"enables {P_mem_threshold/P_ref_threshold:.1f}× stronger response to the same antigen." if P_ref_threshold > 0 else f"enables response where naive cells cannot activate."
+        ], style={'fontSize': '14px', 'backgroundColor': '#d4edda', 'padding': '10px', 'borderRadius': '5px'})
     ])
 
     # ============================================
-    # PART 3: HEATMAPS (existing code)
+    # PART 3: HEATMAPS
     # ============================================
 
     tau_vals = np.linspace(tau_range[0], tau_range[1], 80)
@@ -467,9 +463,9 @@ def update_all_plots(model, tau_range, N_range, N_ref, tau_ref, KD_threshold, L0
         zmax=np.nanmax(log_KD_equiv)
     ))
     fig1.update_layout(
-        title=f"Equivalent KD with same activation as {KD_threshold} µM (N={N_ref}, τ={tau_ref})",
-        xaxis_title="Proofreading steps (N)",
-        yaxis_title="Integration time (τ)",
+        title=f"Equivalent KD with same activation as {KD_threshold} µM (Naive: N={N_ref}, τ={tau_ref})",
+        xaxis_title="Proofreading steps (N) - Lower = More Primed",
+        yaxis_title="Integration time (τ) - Lower = Faster Response",
         template="plotly_white",
         height=600,
         xaxis=dict(showgrid=False),
@@ -493,9 +489,9 @@ def update_all_plots(model, tau_range, N_range, N_ref, tau_ref, KD_threshold, L0
         zmax=np.nanmax(log_KD_equiv)
     ))
     fig2.update_layout(
-        title=f"New activations above negative selection ({neg_cutoff} µM)",
-        xaxis_title="Proofreading steps (N)",
-        yaxis_title="Integration time (τ)",
+        title=f"New activations above negative selection ({neg_cutoff} µM) - Danger Zone",
+        xaxis_title="Proofreading steps (N) - Lower = More Primed",
+        yaxis_title="Integration time (τ) - Lower = Faster Response",
         template="plotly_white",
         height=600,
         xaxis=dict(showgrid=False),
@@ -516,16 +512,16 @@ def update_all_plots(model, tau_range, N_range, N_ref, tau_ref, KD_threshold, L0
         zmax=np.nanmax(log_fold_change)
     ))
     fig3.update_layout(
-        title=f"Fold expansion of antigen landscape (relative to {KD_threshold} µM)",
-        xaxis_title="Proofreading steps (N)",
-        yaxis_title="Integration time (τ)",
+        title=f"Fold expansion of antigen landscape (relative to {KD_threshold} µM baseline)",
+        xaxis_title="Proofreading steps (N) - Lower = More Primed",
+        yaxis_title="Integration time (τ) - Lower = Faster Response",
         template="plotly_white",
         height=600,
         xaxis=dict(showgrid=False),
         yaxis=dict(showgrid=False)
     )
 
-    return fig1, fig2, fig3
+    return fig_activation, summary, fig1, fig2, fig3
 
 
 # =========================
@@ -533,5 +529,8 @@ def update_all_plots(model, tau_range, N_range, N_ref, tau_ref, KD_threshold, L0
 # =========================
 
 port = int(os.environ.get("PORT", 8080))
+# if __name__ == "__main__":
+#     app.run_server(host="0.0.0.0", port=port)
+
 if __name__ == "__main__":
-    app.run_server(host="0.0.0.0", port=port)
+    app.run(host="0.0.0.0", port=port)
