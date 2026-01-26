@@ -105,14 +105,14 @@ app.layout = html.Div([
     html.Label("τ range (integration time) - Memory has LOWER τ"),
     dcc.RangeSlider(
         id='tau_range', min=0.5, max=10, step=0.25,
-        value=[0.5, 2.0],
+        value=[0.5, 2.8],
         marks={i: str(i) for i in range(0, 11, 2)}
     ),
 
     html.Label("N range (proofreading depth) - Memory has LOWER N"),
     dcc.RangeSlider(
         id='N_range', min=1, max=8, step=0.25,
-        value=[1, 2],
+        value=[1, 2.67],
         marks={i: str(i) for i in range(1, 9)}
     ),
 
