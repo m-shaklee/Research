@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Kinetic Proofreading – Standalone Explorer</title>
+
+<script src="https://cdn.plot.ly/plotly-2.27.0.min.js"></script>
+
+<style>
+body {
+    font-family: Arial, sans-serif;
+    margin: 20px;
+}
+h2, h3 {
+    margin-top: 30px;
+}
+.control-group {
+    margin-bottom: 15px;
+}
+label {
+    font-weight: bold;
+}
+input[type=range] {
+    width: 100%;
+}
+.summary {
+    background: #e8f4f8;
+    padding: 15px;
+    border-radius: 5px;
+    margin-top: 15px;
+}
+.warning {
+    color: darkred;
+    font-weight: bold;
+}
+</style>
+</head>
+
+<body>
+
+<h2>Kinetic Proofreading: Memory Cell Priming</h2>
+
+<div class="control-group">
+<label>Model</label><br>
+<select id="model">
+    <option value="simple">Simplified KP</option>
+    <option value="concentration">KP with Concentration</option>
+</select>
+</div>
+
+<div class="control-group">
+<label>Curve Mode</label><br>
+<select id="mode">
+    <option value="affinity">Vary Affinity (KD)</option>
+    <option value="concentration">Vary Concentration</option>
+</select>
+</div>
+
+<hr>
+
+<h3>Reference (Naive) Parameters</h3>
+
+<label>N (proofreading steps)</label>
+<input type="range" id="N_ref" min="1" max="8" step="0.25" value="2.67">
+
+<label>τ (integration time)</label>
+<input type="range" id="tau_ref" min="0.5" max="10" step="0.25" value="2.8">
+
+<h3>Memory (Primed) Parameters</h3>
+
+<label>N (lower = more primed)</label>
+<input type="range" id="N_mem" min="1" max="8" step="0.25" value="1.5">
+
+<label>τ (lower = faster)</label>
+<input type="range" id="tau_mem" min="0.5" max="10" step="0.25" value="1.0">
+
+<h3>Thresholds</h3>
+
+<label>Activation KD threshold (µM)</label>
+<input type="range" id="KD_thresh" min="1" max="300" step="1" value="50">
+
+<h3>Concentration Parameters</h3>
+
+<label>Ligand concentration L₀</label>
+<input type="range" id="L0" min="1" max="200" step="5" value="50">
+
+<label>Receptor count R₀</label>
+<input type="range" id="R0" min="1" max="200" step="5" value="50">
+
+<hr>
+
+<h3>Activation Curve</h3>
+<div id="activationPlot" style="height:600px;"></div>
+
+<h3>Quantitative Summary</h3>
+<div id="summary" class="summary"></div>
+
+<h3>Heatmaps</h3>
+<div id="heatmap1" style="height:500px;"></div>
+<div id="heatmap2" style="height:500px;"></div>
+<div id="heatmap3" style="height:500px;"></div>
+
+<script>
+// =====================
+// Models
+// =====================
+function activationSimple(KD, N, tau, kon=1e5) {
+    const KD_M = KD * 1e-6;
+    const koff = KD_M * kon || 1e-300;
+    const tau_b = 1 / koff;
+    const tau_step = tau / N;
+    return Math.pow(tau_b / (tau_b + tau_step), N);
+}
+
+function activationConcentration(KD, N, tau, L0, R0, threshold=1.0, kon=1e5) {
+    const kp = 1 / tau;
+    const KD_M = KD * 1e-6;
+    const koff = KD_M * kon;
+
+    const term = L0 + R0 + koff / kon;
+    const disc = Math.max(term*term - 4*L0*R0, 0);
+    const Ctot = (term - Math.sqrt(disc)) / 2;
+    const CN = Ctot * Math.pow(1 + koff / kp, -N);
+    return Math.min(1, Math.max(0, 1 - Math.exp(-CN / threshold)));
+}
+
+// =====================
+// Update logic
+// =====================
+function update() {
+    const model = modelSel.value;
+    const mode = modeSel.value;
+
+    const Nref = +NrefEl.value;
+    const tauref = +taurefEl.value;
+    const Nmem = +NmemEl.value;
+    const taumem = +taumemEl.value;
+    const KDth = +KDthEl.value;
+    const L0 = +L0El.value;
+    const R0 = +R0El.value;
+
+    let x = [];
+    let Pref = [];
+    let Pmem = [];
+
+    if (mode === "affinity") {
+        x = Array.from({length:200},(_,i)=>Math.pow(10,-1+4*i/199));
+        for (let kd of x) {
+            Pref.push(
+                model==="simple"
+                ? activationSimple(kd,Nref,tauref)
+                : activationConcentration(kd,Nref,tauref,L0,R0)
+            );
+            Pmem.push(
+                model==="simple"
+                ? activationSimple(kd,Nmem,taumem)
+                : activationConcentration(kd,Nmem,taumem,L0,R0)
+            );
+        }
+    } else {
+        x = Array.from({length:200},(_,i)=>Math.pow(10,-1+4*i/199));
+        for (let l of x) {
+            Pref.push(activationConcentration(KDth,Nref,tauref,l,R0));
+            Pmem.push(activationConcentration(KDth,Nmem,taumem,l,R0));
+        }
+    }
+
+    Plotly.react("activationPlot",[
+        {x,y:Pref,mode:"lines",name:"Naive"},
+        {x,y:Pmem,mode:"lines",name:"Memory"}
+    ],{
+        xaxis:{type:"log",title: mode==="affinity"?"KD (µM)":"Ligand concentration"},
+        yaxis:{title:"P(activation)",range:[0,1]},
+        title:"Activation Probability"
+    });
+
+    const idx50r = Pref.reduce((a,v,i)=>Math.abs(v-0.5)<Math.abs(Pref[a]-0.5)?i:a,0);
+    const idx50m = Pmem.reduce((a,v,i)=>Math.abs(v-0.5)<Math.abs(Pmem[a]-0.5)?i:a,0);
+
+    summary.innerHTML = `
+    <b>Priming effect:</b><br>
+    ΔN = ${(Nmem-Nref).toFixed(2)}, Δτ = ${(taumem-tauref).toFixed(2)}<br><br>
+    50% activation:
+    ${x[idx50r].toFixed(1)} → ${x[idx50m].toFixed(1)}
+    <br>
+    <b>Fold expansion:</b> ${(x[idx50m]/x[idx50r]).toFixed(2)}×
+    `;
+
+    // Heatmaps
+    const Nvals = Array.from({length:40},(_,i)=>1+i*(7/39));
+    const tauvals = Array.from({length:40},(_,i)=>0.5+i*(9.5/39));
+    let Z = [];
+
+    for (let t of tauvals) {
+        let row = [];
+        for (let n of Nvals) {
+            let kd = 1;
+            for (let i=0;i<200;i++) {
+                const p = model==="simple"
+                    ? activationSimple(kd,n,t)
+                    : activationConcentration(kd,n,t,L0,R0);
+                if (p<activationSimple(KDth,Nref,tauref)) kd*=1.05;
+            }
+            row.push(Math.log10(kd));
+        }
+        Z.push(row);
+    }
+
+    Plotly.react("heatmap1",[{
+        x:Nvals,y:tauvals,z:Z,type:"heatmap"
+    }],{title:"Equivalent KD (log10)"});
+
+    Plotly.react("heatmap2",[{
+        x:Nvals,y:tauvals,z:Z.map(r=>r.map(v=>v>=Math.log10(170)?v:null)),
+        type:"heatmap",colorscale:"Reds"
+    }],{title:"Danger Zone (≥170 µM)"});
+
+    Plotly.react("heatmap3",[{
+        x:Nvals,y:tauvals,z:Z.map(r=>r.map(v=>v-Math.log10(KDth))),
+        type:"heatmap"
+    }],{title:"Fold Expansion"});
+}
+
+// =====================
+// Wiring
+// =====================
+const modelSel = document.getElementById("model");
+const modeSel = document.getElementById("mode");
+const NrefEl = document.getElementById("N_ref");
+const taurefEl = document.getElementById("tau_ref");
+const NmemEl = document.getElementById("N_mem");
+const taumemEl = document.getElementById("tau_mem");
+const KDthEl = document.getElementById("KD_thresh");
+const L0El = document.getElementById("L0");
+const R0El = document.getElementById("R0");
+
+document.querySelectorAll("input,select").forEach(el=>{
+    el.addEventListener("input",update);
+});
+
+update();
+</script>
+
+</body>
+</html>

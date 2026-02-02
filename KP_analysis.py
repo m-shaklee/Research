@@ -766,8 +766,8 @@ def update_all_plots(model, curve_mode, fixed_KD, tau_range, N_range, N_ref, tau
 # =========================
 
 port = int(os.environ.get("PORT", 8080))
-# if __name__ == "__main__":
-#     app.run_server(host="0.0.0.0", port=port)
-
 if __name__ == "__main__":
-    app.run(host="0.0.0.0", port=port)
+    app.run_server(host="0.0.0.0", port=port)
+
+# if __name__ == "__main__":
+#     app.run(host="0.0.0.0", port=port)
