@@ -147,7 +147,7 @@ app.layout = html.Div([
     dcc.Slider(id='L0', min=1, max=200, step=5, value=50),
 
     html.Label("Receptor count R₀"),
-    dcc.Slider(id='R0', min=1, max=200, step=5, value=50),
+    dcc.Slider(id='R0', min=1000, max=50000, step=1000, value=30000),
 
     html.Br(),
 
@@ -170,11 +170,11 @@ app.layout = html.Div([
     ),
     html.Div([
         html.Label("Fixed KD for concentration mode (µM)"),
-        dcc.Slider(
-            id='fixed_KD',
-            min=1, max=300, step=1, value=50,
-            marks={1: '1', 10: '10', 50: '50', 100: '100', 300: '300'}
-        )
+            dcc.Slider(
+                id='fixed_KD',
+                min=1, max=300, step=1, value=50,
+                marks={1: '1', 10: '10', 50: '50', 100: '100', 300: '300'}
+            )
     ], id='concentration-controls', style={'marginBottom': '10px'}),
     dcc.Graph(id='activation-curve', style={'height': '600px'})
 ]),
@@ -190,9 +190,9 @@ app.layout = html.Div([
         })
     ]),
 
-    dcc.Graph(id='KD-heatmap', style={'height': '600px'}),
-    dcc.Graph(id='KD-difference', style={'height': '600px'}),
-    dcc.Graph(id='KD-range-size', style={'height': '600px'})
+    dcc.Graph(id='KD-heatmap', style={'height': '1000px'}),
+    dcc.Graph(id='KD-difference', style={'height': '1000px'}),
+    dcc.Graph(id='KD-range-size', style={'height': '1000px'})
 ])
 
 # =========================
@@ -305,77 +305,9 @@ def update_equations(model):
     Input('L0', 'value'),
     Input('R0', 'value')
 )
-# def update_all_plots(model, tau_range, N_range, N_ref, tau_ref, KD_threshold, L0, R0):
-def update_all_plots(model, curve_mode, fixed_KD, tau_range, N_range, N_ref, tau_ref, KD_threshold, L0, R0):
-    
-    # ============================================
-    # PART 1: ACTIVATION PROBABILITY VS AFFINITY
-    # ============================================
-    
-#     KD_range = np.logspace(-1, 3, 200)  # 0.1 to 1000 µM
-    
-#     # Reference (naive) parameters - HIGH KP (more selective)
-#     if model == 'simple':
-#         P_ref = activation_probability_simple(KD_range, N_ref, tau_ref)
-#     else:
-#         P_ref = activation_probability_concentration(KD_range, N_ref, tau_ref, L0, R0)
-    
-#     # Memory parameters - use the MIN from the ranges for primed/reduced KP
-#     N_mem = N_range[0]  # MINIMUM N from range (less proofreading)
-#     tau_mem = tau_range[0]  # MINIMUM tau from range (faster response)
-    
-#     if model == 'simple':
-#         P_mem = activation_probability_simple(KD_range, N_mem, tau_mem)
-#     else:
-#         P_mem = activation_probability_concentration(KD_range, N_mem, tau_mem, L0, R0)
-    
-#     # Create activation probability plot
-#     fig_activation = go.Figure()
-    
-#     fig_activation.add_trace(go.Scatter(
-#         x=KD_range,
-#         y=P_ref,
-#         mode='lines',
-#         name=f'Naive (N={N_ref}, τ={tau_ref})',
-#         line=dict(width=3, color='blue')
-#     ))
-    
-#     fig_activation.add_trace(go.Scatter(
-#         x=KD_range,
-#         y=P_mem,
-#         mode='lines',
-#         name=f'Memory - Primed (N={N_mem}, τ={tau_mem})',
-#         line=dict(width=3, color='red')
-#     ))
-    
-#     # Add negative selection threshold
-#     fig_activation.add_vline(
-#         x=170,
-#         line_dash="dot",
-#         line_color="orange",
-#         annotation_text="Neg. selection (170 µM)"
-#     )
-    
-#     fig_activation.update_layout(
-#         title="Activation Probability vs Antigen Affinity (Naive vs Memory - Reduced KP)",
-#         xaxis_title="K<sub>D</sub> (µM)",
-#         yaxis_title="P(activation)",
-#         xaxis_type="log",
-#         xaxis_range=[-1, 3],
-#         template="plotly_white",
-#         height=600,
-#         # xaxis=dict(showgrid=True, gridcolor='lightgray'),
-#         xaxis=dict(
-#     showgrid=True, 
-#     gridcolor='lightgray',
-#     tickmode='array',
-#     tickvals=[0.1, 0.5, 1, 5, 10, 50, 100, 170, 500, 1000],
-#     ticktext=['0.1', '0.5', '1', '5', '10', '50', '100', '<b>170</b>', '500', '1000']
-# ),
-#         yaxis=dict(showgrid=True, gridcolor='lightgray'),
-#         legend=dict(x=0.02, y=0.98, bgcolor='rgba(255,255,255,0.8)')
-#     )
 
+def update_all_plots(model, curve_mode, fixed_KD, tau_range, N_range, N_ref, tau_ref, KD_threshold, L0, R0):
+ 
     N_mem = N_range[0]  # MINIMUM N from range (less proofreading)
     tau_mem = tau_range[0]  # MINIMUM tau from range (faster response)
     
@@ -684,7 +616,7 @@ def update_all_plots(model, curve_mode, fixed_KD, tau_range, N_range, N_ref, tau
             xaxis_title="Proofreading steps (N)",
             yaxis_title="Integration time (τ)",
             template="plotly_white",
-            height=600,
+            height=1000,
             xaxis=dict(showgrid=False),
             yaxis=dict(showgrid=False)
         )
@@ -717,7 +649,7 @@ def update_all_plots(model, curve_mode, fixed_KD, tau_range, N_range, N_ref, tau
             xaxis_title="Proofreading steps (N) - Lower = More Primed",
             yaxis_title="Integration time (τ) - Lower = Faster Response",
             template="plotly_white",
-            height=600,
+            height=1000,
             xaxis=dict(showgrid=False),
             yaxis=dict(showgrid=False)
         )
@@ -748,7 +680,7 @@ def update_all_plots(model, curve_mode, fixed_KD, tau_range, N_range, N_ref, tau
             xaxis_title="Proofreading steps (N) - Lower = More Primed",
             yaxis_title="Integration time (τ) - Lower = Faster Response",
             template="plotly_white",
-            height=600,
+            height=1000,
             xaxis=dict(showgrid=False),
             yaxis=dict(showgrid=False)
         )
