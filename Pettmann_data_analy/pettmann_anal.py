@@ -503,26 +503,46 @@ def main_correct_analysis():
     
     # Load data - UPDATE PATHS
     print("Loading KD values...")
-    kd_dict = load_kd_values('/home/maddie/Desktop/Projects/Research/Pettmann_data_analy/elife-67092-fig1-data2-v3.csv')
+    # kd_dict = load_kd_values('/home/maddie/Desktop/Projects/Research/Pettmann_data_analy/elife-67092-fig1-data2-v3.csv')
+    kd_dict = load_kd_values('/Users/maddie/Desktop/Projects/Research/Pettmann_data_analy/elife-67092-fig1-data2-v3.csv')
+
     print(f"✓ Loaded KD values for {len(kd_dict)} peptides\n")
     
     print("Loading dose-response data...")
+    # data_files = {
+    #     'memory': [
+    #         '/home/maddie/Desktop/Projects/Research/Pettmann_data_analy/Figure 2 - 1G4 memory and DC/190722d1 memory CD69 Pos.csv',
+    #         '/home/maddie/Desktop/Projects/Research/Pettmann_data_analy/Figure 2 - 1G4 memory and DC/190807d1 memory CD69 Pos.csv',
+    #         '/home/maddie/Desktop/Projects/Research/Pettmann_data_analy/Figure 2 - 1G4 memory and DC/190812d4 memory CD69 Pos.csv',
+    #         '/home/maddie/Desktop/Projects/Research/Pettmann_data_analy/Figure 2 - 1G4 memory and DC/191019d1 memory CD69 Pos.csv',
+    #         '/home/maddie/Desktop/Projects/Research/Pettmann_data_analy/Figure 2 - 1G4 memory and DC/191022d1 memory CD69 Pos.csv',
+    #         '/home/maddie/Desktop/Projects/Research/Pettmann_data_analy/Figure 2 - 1G4 memory and DC/191027d1 memory CD69 Pos.csv'
+    #     ],
+    #     'naive': [
+    #         '/home/maddie/Desktop/Projects/Research/Pettmann_data_analy/Figure 2 - 1G4 naive and DC/190708d3 naive CD69 Pos.csv',
+    #         '/home/maddie/Desktop/Projects/Research/Pettmann_data_analy/Figure 2 - 1G4 naive and DC/190715d1 naive CD69 Pos.csv',
+    #         '/home/maddie/Desktop/Projects/Research/Pettmann_data_analy/Figure 2 - 1G4 naive and DC/190715d2 naive CD69 Pos.csv',
+    #         '/home/maddie/Desktop/Projects/Research/Pettmann_data_analy/Figure 2 - 1G4 naive and DC/190715d4 naive CD69 Pos.csv',
+    #         '/home/maddie/Desktop/Projects/Research/Pettmann_data_analy/Figure 2 - 1G4 naive and DC/190807d2 naive CD69 Pos.csv',
+    #         '/home/maddie/Desktop/Projects/Research/Pettmann_data_analy/Figure 2 - 1G4 naive and DC/190816d8 naive CD69 Pos.csv'
+    #     ]
+    # }
     data_files = {
         'memory': [
-            '/home/maddie/Desktop/Projects/Research/Pettmann_data_analy/Figure 2 - 1G4 memory and DC/190722d1 memory CD69 Pos.csv',
-            '/home/maddie/Desktop/Projects/Research/Pettmann_data_analy/Figure 2 - 1G4 memory and DC/190807d1 memory CD69 Pos.csv',
-            '/home/maddie/Desktop/Projects/Research/Pettmann_data_analy/Figure 2 - 1G4 memory and DC/190812d4 memory CD69 Pos.csv',
-            '/home/maddie/Desktop/Projects/Research/Pettmann_data_analy/Figure 2 - 1G4 memory and DC/191019d1 memory CD69 Pos.csv',
-            '/home/maddie/Desktop/Projects/Research/Pettmann_data_analy/Figure 2 - 1G4 memory and DC/191022d1 memory CD69 Pos.csv',
-            '/home/maddie/Desktop/Projects/Research/Pettmann_data_analy/Figure 2 - 1G4 memory and DC/191027d1 memory CD69 Pos.csv'
+            '/Users/maddie/Desktop/Projects/Research/Pettmann_data_analy/Figure 2 - 1G4 memory and DC/190722d1 memory CD69 Pos.csv',
+            '/Users/maddie/Desktop/Projects/Research/Pettmann_data_analy/Figure 2 - 1G4 memory and DC/190807d1 memory CD69 Pos.csv',
+            '/Users/maddie/Desktop/Projects/Research/Pettmann_data_analy/Figure 2 - 1G4 memory and DC/190812d4 memory CD69 Pos.csv',
+            '/Users/maddie/Desktop/Projects/Research/Pettmann_data_analy/Figure 2 - 1G4 memory and DC/191019d1 memory CD69 Pos.csv',
+            '/Users/maddie/Desktop/Projects/Research/Pettmann_data_analy/Figure 2 - 1G4 memory and DC/191022d1 memory CD69 Pos.csv',
+            '/Users/maddie/Desktop/Projects/Research/Pettmann_data_analy/Figure 2 - 1G4 memory and DC/191027d1 memory CD69 Pos.csv'
         ],
         'naive': [
-            '/home/maddie/Desktop/Projects/Research/Pettmann_data_analy/Figure 2 - 1G4 naive and DC/190708d3 naive CD69 Pos.csv',
-            '/home/maddie/Desktop/Projects/Research/Pettmann_data_analy/Figure 2 - 1G4 naive and DC/190715d1 naive CD69 Pos.csv',
-            '/home/maddie/Desktop/Projects/Research/Pettmann_data_analy/Figure 2 - 1G4 naive and DC/190715d2 naive CD69 Pos.csv',
-            '/home/maddie/Desktop/Projects/Research/Pettmann_data_analy/Figure 2 - 1G4 naive and DC/190715d4 naive CD69 Pos.csv',
-            '/home/maddie/Desktop/Projects/Research/Pettmann_data_analy/Figure 2 - 1G4 naive and DC/190807d2 naive CD69 Pos.csv',
-            '/home/maddie/Desktop/Projects/Research/Pettmann_data_analy/Figure 2 - 1G4 naive and DC/190816d8 naive CD69 Pos.csv'
+            '/Users/maddie/Desktop/Projects/Research/Pettmann_data_analy/Figure 2 - 1G4 naive and DC/190708d3 naive CD69 Pos.csv',
+            '/Users/maddie/Desktop/Projects/Research/Pettmann_data_analy/Figure 2 - 1G4 naive and DC/190715d1 naive CD69 Pos.csv',
+            '/Users/maddie/Desktop/Projects/Research/Pettmann_data_analy/Figure 2 - 1G4 naive and DC/190715d2 naive CD69 Pos.csv',
+            '/Users/maddie/Desktop/Projects/Research/Pettmann_data_analy/Figure 2 - 1G4 naive and DC/190715d4 naive CD69 Pos.csv',
+            '/Users/maddie/Desktop/Projects/Research/Pettmann_data_analy/Figure 2 - 1G4 naive and DC/190807d2 naive CD69 Pos.csv',
+            '/Users/maddie/Desktop/Projects/Research/Pettmann_data_analy/Figure 2 - 1G4 naive and DC/190816d8 naive CD69 Pos.csv'
         ]
     }
     
@@ -548,7 +568,8 @@ def main_correct_analysis():
     
     # Visualization
     print("Creating visualization...")
-    output_dir = '/home/maddie/Desktop/Projects/Research/Pettmann_data_analy/outputs'
+    # output_dir = '/home/maddie/Desktop/Projects/Research/Pettmann_data_analy/outputs'
+    output_dir = '/Users/maddie/Desktop/Projects/Research/Pettmann_data_analy/outputs'
     import os
     os.makedirs(output_dir, exist_ok=True)
     
